@@ -1,26 +1,26 @@
 {
-    "name": "REPO-NAME",
+    "name": "alfred-attio-workflow",
     "version": "0.0.1",
     "description": "TODO",
     "keywords": [
         "alfred",
         "workflow",
-        "TODO"
+        "attio"
     ],
-    "homepage": "https://github.com/REPO-ORG/REPO-NAME",
+    "homepage": "https://github.com/flomarin88/alfred-attio-workflow",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/REPO-ORG/REPO-NAME.git"
+        "url": "git+https://github.com/flomarin88/alfred-attio-workflow.git"
     },
     "license": "MIT",
     "author": {
-        "name": "AUTHOR_NAME",
-        "email": "AUTHOR_EMAIL"
+        "name": "flomarin88",
+        "email": "flomarin88+alfred@gmail.com"
     },
     "maintainers": [
         {
-            "name": "AUTHOR_NAME",
-            "email": "AUTHOR_EMAIL"
+            "name": "flomarin88",
+            "email": "flomarin88+alfred@gmail.com"
         }
     ],
     "scripts": {

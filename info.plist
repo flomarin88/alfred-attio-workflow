@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>bundleid</key>
+    <string>flomarin88.attio.workflow</string>
+    <key>category</key>
+    <string>Tools</string>
+    <key>connections</key>
+    <dict></dict>
+    <key>createdby</key>
+    <string>flomarin88</string>
+    <key>description</key>
+    <string>TODO</string>
+    <key>disabled</key>
+    <false></false>
+    <key>name</key>
+    <string>Attio</string>
+    <key>objects</key>
+    <array></array>
+    <key>readme</key>
+    <string>TODO - fill README
+
+See the workflow codebase in here:
+https://github.com/flomarin88/alfred-attio-workflow</string>
+    <key>uidata</key>
+    <dict></dict>
+    <key>userconfigurationconfig</key>
+    <array>
+      <dict>
+        <key>config</key>
+        <dict>
+          <key>default</key>
+          <string></string>
+          <key>placeholder</key>
+          <string></string>
+          <key>required</key>
+          <true></true>
+          <key>trim</key>
+          <true></true>
+        </dict>
+        <key>description</key>
+        <string></string>
+        <key>label</key>
+        <string>Attio API Key</string>
+        <key>type</key>
+        <string>textfield</string>
+        <key>variable</key>
+        <string>API_KEY</string>
+      </dict>
+    </array>
+    <key>version</key>
+    <string>0.0.1</string>
+    <key>webaddress</key>
+    <string>https://github.com/flomarin88/alfred-attio-workflow</string>
+  </dict>
+</plist>

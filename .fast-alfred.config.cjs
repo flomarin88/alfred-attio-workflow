@@ -13,7 +13,7 @@ ${homepage}
 module.exports = {
     bundlerOptions: {},
     workflowMetadata: {
-        name: 'WORKFLOW_NAME',
+        name: 'Attio',
         // category: 'Internet',
         createdby: author.name,
         webaddress: homepage,

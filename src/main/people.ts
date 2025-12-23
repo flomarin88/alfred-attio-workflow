@@ -6,12 +6,23 @@ import { Variables } from '@common/variables.enum'
     const alfredClient = new FastAlfred()
 
     const attioApiKey: string = alfredClient.env.getEnv(Variables.API_KEY, { defaultValue: '' })
-    alfredClient.log('api key -> ' + attioApiKey)
 
     const attioClient = new Attio({
         apiKey: attioApiKey,
     })
 
-    const people = await attioClient.objects.list()
-    console.log(people)
+    const last10PeopleEdited = await attioClient.records.query({
+        object: 'people',
+        requestBody: {
+            sorts: [
+                {
+                    direction: 'desc',
+                    attribute: 'last_setting_action_at',
+                },
+            ],
+            limit: 10,
+        },
+    })
+    console.log(last10PeopleEdited)
+    return last10PeopleEdited.data.values
 })()

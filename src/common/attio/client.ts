@@ -30,7 +30,7 @@ type AttioRecordId = {
   record_id: string // uuid
 }
 
-type AttioPersonRecord = {
+type AttioRecord = {
   id: AttioRecordId
   created_at: string // ISO datetime string
   web_url: string
@@ -38,7 +38,11 @@ type AttioPersonRecord = {
 }
 
 type PeopleQueryResponse = {
-  data: AttioPersonRecord[]
+  data: AttioRecord[]
+}
+
+type GetRecordResponse = {
+  data: AttioRecord
 }
 
 type AttioErrorResponse = {
@@ -101,13 +105,39 @@ export class AttioClient {
     return json as PeopleQueryResponse
   }
 
+  async getCompany(recordId: string): Promise<GetRecordResponse> {
+    const url = `${this.baseUrl}/v2/objects/companies/records/${recordId}`
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${this.accessToken}`,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+    })
+
+    const text = await res.text()
+    const json = text ? (JSON.parse(text) as unknown) : undefined
+
+    if (!res.ok) {
+      const err = json as Partial<AttioErrorResponse> | undefined
+      throw new AttioApiError(err?.message ?? `Attio API error (${res.status})`, res.status, {
+        code: err?.code,
+        type: err?.type,
+      })
+    }
+
+    return json as GetRecordResponse
+  }
+
   /**
    * Convenience helper to page through all results (offset pagination).
    * Stops when the API returns fewer than `pageSize` records.
    */
   async queryAllPeople(opts: Omit<PeopleQueryRequest, 'limit' | 'offset'> & { pageSize?: number } = {}) {
     const pageSize = opts.pageSize ?? 500
-    const out: AttioPersonRecord[] = []
+    const out: AttioRecord[] = []
     let offset = 0
 
     for (;;) {

@@ -3,6 +3,26 @@ import { FastAlfred } from 'fast-alfred'
 import { AttioClient } from '@common/attio/client'
 import { Variables } from '@common/variables.enum'
 
+type CompanyMap = Record<string, string>
+
+async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<string>): Promise<CompanyMap> {
+  const entries = await Promise.all(
+    [...companyIds].map(async (id) => {
+      try {
+        const companyRecord = await attioClient.getCompany(id)
+        const companyNameValues = companyRecord.data.values['name'] as Array<{ value?: string }> | undefined
+        const name = companyNameValues?.[0]?.value ?? '(no company)'
+        return [id, name] as const
+      } catch (e) {
+        // En cas d'erreur sur une company, on ne fait pas tomber tout le rendu
+        return [id, '(company fetch error)'] as const
+      }
+    }),
+  )
+
+  return Object.fromEntries(entries)
+}
+
 ;(async () => {
   const alfredClient = new FastAlfred()
 
@@ -23,13 +43,28 @@ import { Variables } from '@common/variables.enum'
       limit: 9,
     })
 
-    console.log(last10PeopleEdited.data[0].values.job_title)
+    const companyIds = last10PeopleEdited.data.reduce((ids, person) => {
+      const companyRef = person.values['company'] as Array<{ target_record_id?: string }> | undefined
+      const id = companyRef?.[0]?.target_record_id
+      if (id) ids.add(id)
+      return ids
+    }, new Set<string>())
+
+    const companies = await fetchCompaniesMap(attioClient, companyIds)
+
     const items: AlfredListItem[] = last10PeopleEdited.data.map((person) => {
       const nameValues = person.values['name'] as Array<{ full_name?: string }> | undefined
-      const jobTitle = person.values['job_title'] as Array<{ value?: string }> | undefined
+      const jobTitleValues = person.values['job_title'] as Array<{ value?: string }> | undefined
+      const companyRef = person.values['company'] as Array<{ target_record_id?: string }> | undefined
+      const companyId = companyRef?.[0]?.target_record_id
+
+      const subtitleParts: string[] = [jobTitleValues?.[0]?.value ?? '(no position)']
+      subtitleParts.push(companyId ? companies[companyId] ?? '(no company)' : '(no company)')
+
       return {
+        uid: person.id.record_id,
         title: nameValues?.[0]?.full_name ?? '(no name)',
-        subtitle: jobTitle?.[0]?.value,
+        subtitle: subtitleParts.join(' | '),
       }
     })
 

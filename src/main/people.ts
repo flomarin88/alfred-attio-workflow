@@ -65,6 +65,9 @@ async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<strin
         uid: person.id.record_id,
         title: nameValues?.[0]?.full_name ?? '(no name)',
         subtitle: subtitleParts.join(' | '),
+        icon: {
+          path: './esbuild/assets/people.svg',
+        },
       }
     })
 

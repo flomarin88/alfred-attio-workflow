@@ -75,6 +75,7 @@ async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<strin
     const items: AlfredListItem[] = last10PeopleEdited.data.map((person) => {
       const nameValues = person.values['name'] as Array<{ full_name?: string }> | undefined
       const jobTitleValues = person.values['job_title'] as Array<{ value?: string }> | undefined
+      const linkedinValues = person.values['linkedin'] as Array<{ value?: string }> | undefined
       const companyRef = person.values['company'] as Array<{ target_record_id?: string }> | undefined
       const companyId = companyRef?.[0]?.target_record_id
 
@@ -85,11 +86,19 @@ async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<strin
         uid: person.id.record_id,
         title: nameValues?.[0]?.full_name ?? '(no name)',
         subtitle: subtitleParts.join(' | '),
+        valid: true,
         icon: {
           path: './esbuild/assets/people.svg',
         },
         arg: person.web_url,
         quicklookurl: person.web_url,
+        mods: {
+          cmd: {
+            valid: linkedinValues?.[0].value !== undefined,
+            arg: linkedinValues?.[0].value ?? '',
+            subtitle: 'Open LinkedIn profile',
+          },
+        },
       }
     })
 

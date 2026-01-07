@@ -68,6 +68,8 @@ async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<strin
         icon: {
           path: './esbuild/assets/people.svg',
         },
+        arg: person.web_url,
+        quicklookurl: person.web_url,
       }
     })
 

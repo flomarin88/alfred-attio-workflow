@@ -21,6 +21,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>D5A905CD-D7F6-493C-861D-77F73BAF3D57</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 	</dict>
 	<key>createdby</key>
 	<string>flomarin88</string>
@@ -110,6 +123,27 @@
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string></string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>TODO - fill README
@@ -122,6 +156,13 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 		<dict>
 			<key>xpos</key>
 			<real>360</real>
+			<key>ypos</key>
+			<real>40</real>
+		</dict>
+		<key>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</key>
+		<dict>
+			<key>xpos</key>
+			<real>815</real>
 			<key>ypos</key>
 			<real>40</real>
 		</dict>

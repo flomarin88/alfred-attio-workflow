@@ -1,5 +1,6 @@
 import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
+import { setTimeout } from 'node:timers/promises'
 import { AttioClient } from '@common/attio/client'
 import { Variables } from '@common/variables.enum'
 
@@ -27,13 +28,32 @@ async function fetchCompaniesMap(attioClient: AttioClient, companyIds: Set<strin
   const alfredClient = new FastAlfred()
 
   try {
-    const attioApiKey: string = alfredClient.env.getEnv(Variables.API_KEY, { defaultValue: process.env.API_KEY ?? '' })
+    const debounceTime = 300
+
+    const attioApiKey: string | undefined = alfredClient.env.getEnv(Variables.API_KEY, {
+      defaultValue: process.env.API_KEY,
+    })
+
+    if (!attioApiKey) {
+      throw new Error('Attio API Key is required')
+    }
+
+    await setTimeout(debounceTime)
 
     const attioClient = new AttioClient({
       accessToken: attioApiKey,
     })
 
+    const filterExpression = alfredClient.input
+      ? {
+          name: {
+            $contains: alfredClient.input,
+          },
+        }
+      : undefined
+
     const last10PeopleEdited = await attioClient.queryPeople({
+      filter: filterExpression,
       sorts: [
         {
           direction: 'desc',

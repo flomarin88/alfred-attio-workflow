@@ -21,9 +21,7 @@ const MAIN_DIR = join(ROOT, 'src', 'main')
 const OUT_DIR = join(ROOT, 'esbuild')
 const TSCONFIG = join(ROOT, 'tsconfig.json')
 
-const entries = (await readdir(MAIN_DIR))
-  .filter((file) => file.endsWith('.ts') && !file.endsWith('.legacy.ts'))
-  .map((file) => join(MAIN_DIR, file))
+const entries = (await readdir(MAIN_DIR)).filter((file) => file.endsWith('.ts')).map((file) => join(MAIN_DIR, file))
 
 if (entries.length === 0) {
   console.error('No keyword scripts found under src/main/*.ts')

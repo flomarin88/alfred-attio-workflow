@@ -168,11 +168,9 @@ export default tseslint.config(
   },
 
   // Default no-fetch elsewhere (except client.ts which is explicitly allowed).
-  // The brownfield client.legacy.ts is also exempt — it predates the boundary
-  // and gets retired in Epic 2 with the rest of the people.ts brownfield.
   {
     files: ['src/**/*.ts'],
-    ignores: ['src/common/attio/client.ts', 'src/common/attio/client.legacy.ts'],
+    ignores: ['src/common/attio/client.ts'],
     rules: NO_FETCH_OUTSIDE_CLIENT,
   },
 
@@ -184,18 +182,6 @@ export default tseslint.config(
       ...vitestPlugin.configs.recommended.rules,
       'no-restricted-imports': 'off',
       'no-restricted-globals': 'off',
-    },
-  },
-
-  // Brownfield exception: the existing src/main/people.ts pre-dates the
-  // boundary rules. It will be migrated in Epic 2 (Story 2.1). Until then,
-  // disable the boundary rules for it so this story can land.
-  {
-    files: ['src/main/people.ts'],
-    rules: {
-      'no-restricted-imports': 'off',
-      'no-restricted-globals': 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
     },
   },
 

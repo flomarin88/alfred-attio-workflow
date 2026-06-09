@@ -34,5 +34,10 @@
   "diag.cache.title": "Cache age",
   "diag.lastError.title": "Last error",
   "diag.version.title": "Workflow version",
-  "refresh.success.title": "Cache cleared — {object_count} objects, {attribute_set_count} attribute sets"
+  "refresh.success.title": "Cache cleared — {object_count} objects, {attribute_set_count} attribute sets",
+  "search.empty.people.title": "No people found",
+  "search.empty.people.subtitle": "Query: {query}",
+  "person.mod.linkedin.subtitle": "Open LinkedIn profile",
+  "person.mod.fallback.subtitle": "Open in Attio (no LinkedIn)",
+  "person.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ falls back when LinkedIn is missing (last reminder)"
 }

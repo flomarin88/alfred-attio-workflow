@@ -12,7 +12,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>D5A905CD-D7F6-493C-861D-77F73BAF3D57</string>
+				<string>E686B693-BF28-4E96-95F7-7912EBF12455</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -34,13 +34,23 @@
 				<false/>
 			</dict>
 		</array>
-		<key>D5A905CD-D7F6-493C-861D-77F73BAF3D57</key>
+		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
 				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -58,76 +68,6 @@
 	<string>Attio</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>browser</key>
-				<string></string>
-				<key>skipqueryencode</key>
-				<false/>
-				<key>skipvarencode</key>
-				<false/>
-				<key>spaces</key>
-				<string></string>
-				<key>url</key>
-				<string></string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.openurl</string>
-			<key>uid</key>
-			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>people</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Wait for it ...</string>
-				<key>script</key>
-				<string>./esbuild/assets/run-node.sh esbuild/people.js "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Search for people by name</string>
-				<key>title</key>
-				<string>People</string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>D5A905CD-D7F6-493C-861D-77F73BAF3D57</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -156,6 +96,27 @@
 			<string>028ACD78-4D6D-4AE8-ACBA-14BBB359D13D</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string></string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -304,6 +265,55 @@
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>person</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching people…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/person.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Find a person · ⏎ opens in Attio · ⌘⏎ opens LinkedIn</string>
+				<key>title</key>
+				<string>Person</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>E686B693-BF28-4E96-95F7-7912EBF12455</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>TODO - fill README
@@ -347,12 +357,12 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<key>ypos</key>
 			<real>265</real>
 		</dict>
-		<key>D5A905CD-D7F6-493C-861D-77F73BAF3D57</key>
+		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
 		<dict>
 			<key>xpos</key>
 			<real>600</real>
 			<key>ypos</key>
-			<real>40</real>
+			<real>490</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

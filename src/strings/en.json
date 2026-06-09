@@ -43,5 +43,9 @@
   "search.empty.companies.title": "No companies found",
   "search.empty.companies.subtitle": "Query: {query}",
   "company.mod.website.subtitle": "Open {domain}",
-  "company.mod.fallback.subtitle": "Open in Attio (no website on record)"
+  "company.mod.fallback.subtitle": "Open in Attio (no website on record)",
+  "search.empty.deals.title": "No deals found",
+  "search.empty.deals.subtitle": "Query: {query}",
+  "deal.mod.fallback.subtitle": "Open in Attio (deals have no external link)",
+  "deal.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for deals (last reminder)"
 }

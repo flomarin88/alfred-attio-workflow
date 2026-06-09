@@ -1,0 +1,25 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="56"
+  height="56"
+  viewBox="0 0 56 56"
+  aria-hidden="true"
+  focusable="false"
+>
+  <!-- Badge background (matches your div styling) -->
+  <rect
+    x="0.5"
+    y="0.5"
+    width="55"
+    height="55"
+    rx="16.8"
+    ry="16.8"
+    fill="rgb(38, 109, 240)"
+    stroke="rgba(0, 0, 0, 0.05)"
+  />
+
+  <!-- Icon (original viewBox 0 0 14 14) scaled to 56x56 and centered -->
+  <g transform="translate(0 0) scale(4)">
+    <path xmlns="http://www.w3.org/2000/svg" d="M8.5293 7.5C9.89376 7.5 11 8.60624 11 9.9707C10.9999 10.5391 10.5391 10.9999 9.9707 11H4.0293C3.46086 10.9999 3.00006 10.5391 3 9.9707C3 8.60624 4.10624 7.5 5.4707 7.5H8.5293ZM7 2.5C8.10457 2.5 9 3.39543 9 4.5C9 5.60457 8.10457 6.5 7 6.5C5.89543 6.5 5 5.60457 5 4.5C5 3.39543 5.89543 2.5 7 2.5Z" fill="#FFFFFF"/>
+  </g>
+</svg>

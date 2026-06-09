@@ -11,14 +11,14 @@ ${homepage}
  * @type {import('fast-alfred').FastAlfredConfig}
  */
 module.exports = {
-    bundlerOptions: {},
-    workflowMetadata: {
-        name: 'WORKFLOW_NAME',
-        // category: 'Internet',
-        createdby: author.name,
-        webaddress: homepage,
-        description,
-        readme: README,
-    },
-    tabSize: 4,
+  bundlerOptions: {},
+  workflowMetadata: {
+    name: 'Attio',
+    category: 'Tools',
+    createdby: author.name,
+    webaddress: homepage,
+    description,
+    readme: README,
+  },
+  tabSize: 4,
 }

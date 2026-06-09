@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PRD Validation v2: Alfred Workflow for Attio CRM</title>
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --surface: #ffffff;
+        --border: #e7e5e4;
+        --text: #1c1917;
+        --muted: #78716c;
+
+        --verdict-strong: #16a34a;
+        --verdict-adequate: #65a30d;
+        --verdict-thin: #d97706;
+        --verdict-broken: #dc2626;
+
+        --sev-low: #64748b;
+        --sev-medium: #ca8a04;
+        --sev-high: #ea580c;
+        --sev-critical: #dc2626;
+
+        --grade-exc: #16a34a;
+        --grade-good: #65a30d;
+        --grade-fair: #d97706;
+        --grade-poor: #dc2626;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        font-size: 15px;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+      }
+
+      header.report-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 24px;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .title .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      .grade {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: white;
+        font-size: 15px;
+        white-space: nowrap;
+      }
+      .grade-excellent {
+        background: var(--grade-exc);
+      }
+      .grade-good {
+        background: var(--grade-good);
+      }
+      .grade-fair {
+        background: var(--grade-fair);
+      }
+      .grade-poor {
+        background: var(--grade-poor);
+      }
+
+      .synthesis {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--muted);
+        border-radius: 8px;
+        padding: 18px 22px;
+        margin-bottom: 24px;
+        font-size: 15.5px;
+      }
+      .synthesis p {
+        margin: 0 0 10px;
+      }
+      .synthesis p:last-child {
+        margin-bottom: 0;
+      }
+
+      .dimension-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .dim-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+      .dim-card .dim-name {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .dim-card .dim-verdict {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      section.dimension,
+      section.reviewer-section {
+        margin-bottom: 14px;
+      }
+      section.dimension details,
+      section.reviewer-section details {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      section summary {
+        padding: 14px 20px;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      section summary::-webkit-details-marker {
+        display: none;
+      }
+      section summary::before {
+        content: '▸';
+        display: inline-block;
+        color: var(--muted);
+        transition: transform 0.15s ease;
+      }
+      section details[open] summary::before {
+        transform: rotate(90deg);
+      }
+      section summary h2 {
+        display: inline;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        flex: 1;
+      }
+      .verdict-pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: white;
+      }
+      .verdict-strong {
+        background: var(--verdict-strong);
+      }
+      .verdict-adequate {
+        background: var(--verdict-adequate);
+      }
+      .verdict-thin {
+        background: var(--verdict-thin);
+      }
+      .verdict-broken {
+        background: var(--verdict-broken);
+      }
+
+      .dim-body {
+        padding: 4px 20px 18px;
+      }
+      .dim-judgment {
+        color: var(--text);
+        font-size: 14.5px;
+      }
+      .dim-judgment p {
+        margin: 0 0 10px;
+      }
+
+      .findings-list {
+        padding: 0 20px 4px;
+      }
+      article.finding {
+        padding: 14px 0;
+        border-top: 1px solid var(--border);
+      }
+      article.finding:first-child {
+        border-top: none;
+      }
+      article.finding header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+      .badge {
+        font-size: 10.5px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.4;
+      }
+      .badge-sev-low {
+        background: rgba(100, 116, 139, 0.12);
+        color: var(--sev-low);
+      }
+      .badge-sev-medium {
+        background: rgba(202, 138, 4, 0.14);
+        color: var(--sev-medium);
+      }
+      .badge-sev-high {
+        background: rgba(234, 88, 12, 0.14);
+        color: var(--sev-high);
+      }
+      .badge-sev-critical {
+        background: rgba(220, 38, 38, 0.14);
+        color: var(--sev-critical);
+      }
+      .finding-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 500;
+        flex: 1;
+        min-width: 200px;
+      }
+      .finding-location {
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .finding-note,
+      .finding-fix {
+        margin-top: 6px;
+        font-size: 14px;
+      }
+      .finding-fix strong {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .history-banner {
+        background: rgba(22, 163, 74, 0.08);
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: var(--text);
+      }
+      .history-banner strong {
+        color: var(--grade-exc);
+      }
+
+      .mechanical {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-top: 24px;
+        font-size: 14px;
+      }
+      .mechanical h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .mechanical ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .mechanical li {
+        margin-bottom: 4px;
+        color: var(--text);
+      }
+
+      footer.report-footer {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--muted);
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      footer .meta {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="report-header">
+        <div class="title">
+          <h1>Alfred Workflow for Attio CRM — Validation Report v2</h1>
+          <div class="subtitle">_bmad-output/planning-artifacts/prds/prd-alfred-attio-workflow-2026-06-04/prd.md</div>
+        </div>
+        <div class="grade grade-excellent">Excellent</div>
+      </header>
+
+      <div class="history-banner">
+        <strong>v1 → v2 progression.</strong> v1 graded <strong>Poor</strong> (3 critical, 6 high, 11 medium, 9 low) due
+        to adversarial-surfaced gaps in the late-added F-G feature group, OAuth artefacts surviving the PAT pivot, and
+        persona theater. Update pass closed all critical/high/medium plus 3 of 9 low. v2 rubric re-run returned 0
+        critical, 0 high, 3 medium, 6 low; the 3 mediums (2 broken cross-references and §1 framing under-counting F-G's
+        weight) were fixed in a mechanical follow-up. Current grade reflects the post-fix state.
+      </div>
+
+      <div class="synthesis">
+        <p>
+          This PRD is now decision-ready, downstream-extractable, and structurally clean. The Update pass closed the
+          three v1 criticals (FR-047 cross-cutting cache invalidation; FR-042 datetime timezone behavior; FR-048
+          record-reference target fallback) and all six v1 highs (OAuth artefact scrub; FR-049 attribute-def discovery
+          failure handling; FR-019 single-level drill-down; FR-047 unified mutation cache contract; persona theater
+          removed; §7 success metrics reframed qualitatively to admit the no-telemetry thesis-validation gap).
+        </p>
+        <p>
+          v2 rubric re-validation surfaced two broken FR cross-references in the addendum (§D FR-035→FR-036 and §A
+          FR-027→FR-025) and a §1 framing that under-counted F-G's twelve-FR weight; all three were fixed mechanically.
+          The six remaining low findings are advisory and do not affect the grade — they cover one optional NG2
+          clarification, one journey-beat tidy in UJ-3, an optional edit-friction counter-metric, optional wall-clock
+          perf targets, an FR-029 reserved-but-empty placeholder, and the NFR-006a sub-letter ID.
+        </p>
+      </div>
+
+      <div class="dimension-summary">
+        <div class="dim-card">
+          <div class="dim-name">Decision-readiness</div>
+          <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Substance over theater</div>
+          <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Strategic coherence</div>
+          <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Done-ness clarity</div>
+          <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Scope honesty</div>
+          <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Downstream usability</div>
+          <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Shape fit</div>
+          <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+        </div>
+      </div>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Decision-readiness</h2>
+            <span class="verdict-pill verdict-strong">strong</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                Real decisions stated as decisions. NG2 names what's traded for what (creation deferred because
+                multi-step input UX exceeds V1 budget). FR-031's 24h attribute-definition TTL justifies itself. NFR-004
+                carries per-object TTL motivations. FR-019 names what single-level drill-down buys ("simpler state
+                machine, no recursive refresh contracts, predictable cache invalidation"). NG6 (destructive ops) is new
+                and useful. §8 honestly distinguishes "open product questions" (none) from "build-time confirmations"
+                (two `[ASSUMPTION]`s).
+              </p>
+            </div>
+          </div>
+          <div class="findings-list">
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">NG2 doesn't explicitly close the value-clearing loop</h3>
+                <span class="finding-location">§2 NG2</span>
+              </header>
+              <div class="finding-note">
+                A reader scanning NG2 alongside FR-040 may infer empty input clears the field.
+              </div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> add "(sending empty value to clear is not supported — see addendum §H)"
+                to NG2.
+              </div>
+            </article>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Substance over theater</h2>
+            <span class="verdict-pill verdict-strong">strong</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                Persona theater demolished cleanly (§3 single short paragraph naming why role-neutral phrasing is
+                honest). NFR-001 explicitly disclaims quantitative thresholds because no telemetry ships, and pins
+                itself to a concrete <code>npm run perf</code> script. NFR-006a (concurrency) reasons frankly ("later
+                writer wins on disk … acceptable because"). §10 Glossary is earned, not decorative.
+              </p>
+            </div>
+          </div>
+          <div class="findings-list">
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">UJ-3 closing paragraph reads as meta-commentary</h3>
+                <span class="finding-location">§4 UJ-3</span>
+              </header>
+              <div class="finding-note">
+                "This V1 flow is honest about its constraints…" is useful prose but breaks the journey-beat shape.
+              </div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> move to F-C as a rationale block or to a
+                <code>[NOTE FOR PM]</code> callout.
+              </div>
+            </article>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Strategic coherence</h2>
+            <span class="verdict-pill verdict-adequate">adequate</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                Thesis is stated and load-bearing. Feature prioritization follows. F-G now positioned as co-headline
+                alongside read (§1 mechanical fix). Success metrics validate the thesis weakly — §7 admits this honestly
+                and offers V2-7 (opt-in telemetry) and a qualitative-interview option.
+              </p>
+            </div>
+          </div>
+          <div class="findings-list">
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">No counter-metric for F-G-specific friction</h3>
+                <span class="finding-location">§7</span>
+              </header>
+              <div class="finding-note">
+                F-G is the riskiest user-visible surface in V1, but no counter-metric tracks edit-related friction
+                ("wrong value", "saved wrong").
+              </div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> add an M-7 for edit-friction issues, or expand M-4 to include them.
+              </div>
+            </article>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Done-ness clarity</h2>
+            <span class="verdict-pill verdict-strong">strong</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                Most FRs carry testable consequences. Late-added F-G FRs are notably specific. FR-017 specifies
+                whitespace handling, control-character stripping, and single-line-vs-multi-line newline behavior. FR-031
+                specifies cache key and TTL. FR-042 row-by-row specifies inputs and parse-error behavior. FR-046
+                specifies the loading-state mechanism (<code>pending=&lt;field_slug&gt;</code> query argument). FR-051
+                specifies HTTP status → user-visible copy mappings — the strongest "done" definition expected for an
+                error contract.
+              </p>
+            </div>
+          </div>
+          <div class="findings-list">
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">NFR-001/NFR-002 still use adjectives where numbers were possible</h3>
+                <span class="finding-location">§6 NFR-A</span>
+              </header>
+              <div class="finding-note">
+                "feel instant", "perceptible delay" — the <code>npm run perf</code> script is the de-facto threshold.
+              </div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> pin one wall-clock target each (warm-cache &lt; 50 ms, cold path &lt;
+                2s p50), or rename the section to "perf baseline".
+              </div>
+            </article>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Scope honesty</h2>
+            <span class="verdict-pill verdict-strong">strong</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                Non-goals are explicit and reasoned: NG1 (creation), NG2 (non-scalar edits and clearing), NG3 (sync
+                engine), NG4 (bulk), NG5 (<code>client</code> keyword), NG6 (destructive operations — new and useful).
+                Each gets a one-line "why" or V2 forward-reference. Inline <code>[ASSUMPTION]</code> tags used
+                judiciously and indexed in §8. The <code>[NOTE FOR PM]</code> at FR-004 lands at a real tension.
+                Open-items density (2 assumptions, 1 PM note) is right-sized for stakes.
+              </p>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Downstream usability</h2>
+            <span class="verdict-pill verdict-adequate">adequate</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                §10 glossary defines domain nouns used consistently across §5 and addendum §H. FRs cross-reference each
+                other by ID. Broken cross-references found in v2 (§D FR-035→FR-036; §A FR-027→FR-025) have been
+                corrected. Two residual low items remain: FR-029 reserved-but-empty placeholder, and NFR-006a sub-letter
+                ID.
+              </p>
+            </div>
+          </div>
+          <div class="findings-list">
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">FR-029 reserved-but-empty placeholder</h3>
+                <span class="finding-location">§5 F-C</span>
+              </header>
+              <div class="finding-note">
+                "_(Reserved for V2: OAuth flow keyword.)_" with no current use is fragile against ID-roundtrip tooling.
+              </div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> drop FR-029 and accept the gap (note in §8), or move "Reserved for V2"
+                out of the FR list into §9.
+              </div>
+            </article>
+            <article class="finding">
+              <header>
+                <span class="badge badge-sev-low">low</span>
+                <h3 class="finding-title">NFR-006a sub-letter ID breaks the otherwise-flat NFR scheme</h3>
+                <span class="finding-location">§6 NFR-B</span>
+              </header>
+              <div class="finding-note">Only sub-letter ID in the document.</div>
+              <div class="finding-fix">
+                <strong>Fix (optional):</strong> renumber as NFR-007 and shift subsequent NFRs, or accept
+                letter-suffixed IDs as intentional.
+              </div>
+            </article>
+          </div>
+        </details>
+      </section>
+
+      <section class="dimension">
+        <details>
+          <summary>
+            <h2>Shape fit</h2>
+            <span class="verdict-pill verdict-strong">strong</span>
+          </summary>
+          <div class="dim-body">
+            <div class="dim-judgment">
+              <p>
+                The PRD shape fits the product. Chain-top, public-distribution OSS workflow that will feed UX →
+                architecture → stories. Downstream-usability rigor is warranted and present (glossary, contiguous FRs
+                modulo small breaks, resolving cross-references). Single-operator consumer tool — role-neutral "the
+                user" framing and four UJs are the right load-bearing weight. Brownfield references in addendum §F are
+                accurate to the current branch state.
+              </p>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <div class="mechanical">
+        <h3>Mechanical notes</h3>
+        <ul>
+          <li>
+            <strong>Glossary drift:</strong> none observed in the body. §10 defines all domain terms used in §5 and
+            addendum §H.
+          </li>
+          <li>
+            <strong>ID continuity:</strong> FRs FR-001 → FR-051 contiguous (FR-029 reserved-but-empty). NFRs NFR-001 →
+            NFR-016 plus NFR-006a sub-letter. UJs UJ-1 → UJ-4. Mn IDs M-1 → M-6. V2-1 → V2-10.
+          </li>
+          <li>
+            <strong>Broken cross-references:</strong> all resolved in the mechanical fix pass (addendum §D
+            FR-035→FR-036; addendum §A FR-027→FR-025).
+          </li>
+          <li>
+            <strong>Assumptions Index roundtrip:</strong> §8 names 2 inline <code>[ASSUMPTION]</code>s (FR-004, FR-025).
+            Both appear inline. Index complete.
+          </li>
+          <li>
+            <strong>UJ protagonist naming:</strong> all four UJs use "the user" consistently. §3 names the choice.
+          </li>
+          <li>
+            <strong>Required sections present:</strong> all 10 PRD sections present, addendum §A–§H, decision log
+            comprehensive.
+          </li>
+        </ul>
+      </div>
+
+      <footer class="report-footer">
+        <div class="meta">
+          <span>Rubric: .claude/skills/bmad-prd/assets/prd-validation-checklist.md</span>
+          <span>Generated: 2026-06-04T20:48:18Z</span>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -2,8 +2,6 @@
 name: PR Health Checks 🐛
 on:
     pull_request:
-        branches:
-            - master_1
 
 permissions:
     contents: read
@@ -24,4 +22,4 @@ jobs:
             - name: 🧪 Check out repository code
               uses: ./.github/workflows/health-check
               with:
-                  run-tests: 'false'
+                  run-tests: 'true'

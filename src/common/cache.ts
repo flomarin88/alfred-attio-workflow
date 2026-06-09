@@ -32,6 +32,8 @@ export interface CacheBackend {
   get(key: string): unknown
   has(key: string): boolean
   delete(key: string): void
+  /** Wipes every entry. Used on token rotation (auth.ts) and `attio:refresh`. */
+  clear(): void
 }
 
 // ---------------------------------------------------------------------------
@@ -140,6 +142,15 @@ export class Cache {
    * Safe to call when the record has never been cached: deletes are
    * silent on missing keys.
    */
+  /**
+   * Wipes every cache entry — records, list pages, schemas, list-index.
+   * Used on token rotation (so no stale data from a previous workspace
+   * bleeds into the new one) and by `attio:refresh` (Story 1.9).
+   */
+  clearAll(): void {
+    this.backend.clear()
+  }
+
   invalidateRecord(slug: string, id: string): void {
     // 1. Wipe the record entry itself.
     this.backend.delete(this.key('record', slug, id))

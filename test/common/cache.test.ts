@@ -52,6 +52,10 @@ class MemoryBackend implements CacheBackend {
   delete(key: string): void {
     this.store.delete(key)
   }
+
+  clear(): void {
+    this.store.clear()
+  }
 }
 
 describe('cache.key — stable derivation', () => {
@@ -270,6 +274,23 @@ describe('invalidateRecord — FR-047 contract', () => {
     cache.invalidateRecord('people', 'rec-shared')
     expect(cache.getList('people', 'qhash-a')).toBeUndefined()
     expect(cache.getList('companies', 'qhash-a')).toBeDefined()
+  })
+})
+
+describe('clearAll — token rotation + attio:refresh', () => {
+  it('wipes every entry across records, lists, and schemas', () => {
+    const backend = new MemoryBackend()
+    const cache = createCache(backend)
+
+    cache.setRecord('people', 'rec-1', { id: 'rec-1' })
+    cache.setList('deals', 'qhash-x', [{ id: 'd-1' }])
+    cache.setObjects(['people', 'deals'])
+    cache.setAttributes('deals', [{ slug: 'stage' }])
+
+    expect(backend.store.size).toBeGreaterThan(0)
+
+    cache.clearAll()
+    expect(backend.store.size).toBe(0)
   })
 })
 

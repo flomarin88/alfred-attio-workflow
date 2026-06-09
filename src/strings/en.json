@@ -47,5 +47,11 @@
   "search.empty.deals.title": "No deals found",
   "search.empty.deals.subtitle": "Query: {query}",
   "deal.mod.fallback.subtitle": "Open in Attio (deals have no external link)",
-  "deal.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for deals (last reminder)"
+  "deal.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for deals (last reminder)",
+  "search.empty.tasks.title": "No tasks found",
+  "search.empty.tasks.subtitle": "Query: {query}",
+  "task.status.open": "Open",
+  "task.status.completed": "Completed",
+  "task.mod.fallback.subtitle": "Open in Attio (tasks have no external link)",
+  "task.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for tasks (last reminder)"
 }

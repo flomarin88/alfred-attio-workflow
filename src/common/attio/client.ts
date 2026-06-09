@@ -51,6 +51,8 @@ export interface AttioClientOptions {
 export interface TaskFilter {
   assigneeWorkspaceMemberId?: string
   isCompleted?: boolean
+  /** Optional page size — defaults to whatever Attio returns. */
+  limit?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -245,6 +247,7 @@ export class AttioClient {
     const search = new URLSearchParams()
     if (filter.assigneeWorkspaceMemberId) search.set('assignee', filter.assigneeWorkspaceMemberId)
     if (filter.isCompleted !== undefined) search.set('is_completed', String(filter.isCompleted))
+    if (filter.limit !== undefined) search.set('limit', String(filter.limit))
     const qs = search.toString()
     const path = qs ? `/v2/tasks?${qs}` : '/v2/tasks'
 

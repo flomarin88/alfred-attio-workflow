@@ -22,6 +22,7 @@ Search and act on your [Attio](https://attio.com) CRM records straight from the 
 | `person <query>`  | Search people by name; ⏎ opens the record in Attio, ⌘⏎ opens LinkedIn when present.                    |
 | `company <query>` | Search companies by name; ⏎ opens the record in Attio, ⌘⏎ opens the company website when on record.    |
 | `deal <query>`    | Search deals by name; subtitle shows `{stage} · {value}`; ⏎ opens the record in Attio.                 |
+| `task <query>`    | Search tasks by content; subtitle shows `{deadline} · {Open or Completed}`; ⏎ opens the task in Attio. |
 | `attio:diag`      | A copy-safe diagnostic snapshot (workspace, token presence, cache ages, last error, workflow version). |
 | `attio:refresh`   | Wipe every cache, re-fetch identity + object schemas, scrub Quick Look HTML.                           |
 

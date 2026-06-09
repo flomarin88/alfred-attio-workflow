@@ -3,3 +3,5 @@ dist
 esbuild
 .DS_Store
 .eslintcache
+_bmad
+.claude

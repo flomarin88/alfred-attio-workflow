@@ -1,11 +1,12 @@
 {
   "name": "alfred-attio-workflow",
   "version": "0.0.1",
-  "description": "TODO",
+  "description": "Unofficial Alfred workflow for the Attio CRM — search and act on records from the Alfred bar. Not affiliated with Attio Inc.",
   "keywords": [
     "alfred",
-    "workflow",
-    "attio"
+    "alfred-workflow",
+    "attio",
+    "crm"
   ],
   "homepage": "https://github.com/flomarin88/alfred-attio-workflow",
   "repository": {
@@ -26,12 +27,14 @@
   "scripts": {
     "prebuild": "rm -rf ./dist",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
-    "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
+    "build:icons": "node scripts/build-icons.mjs",
+    "format": "prettier --write \"{src,test,scripts}/**/*.{ts,mjs,js,json}\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "prepare": "husky || exit 0",
     "start:dev": "node dist/index.js --inspect",
-    "test": "jest"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "fast-alfred": "^2.1.2"
@@ -39,6 +42,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@resvg/resvg-js": "^2.6.2",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/exec": "^6.0.3",
@@ -47,32 +51,28 @@
     "@semantic-release/release-notes-generator": "^14.0.0",
     "@total-typescript/ts-reset": "^0.5.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@types/node": "^20.14.2",
-    "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",
-    "eslint": "^8.57.0",
+    "@types/node": "^22.0.0",
+    "@vitest/eslint-plugin": "^1.1.10",
+    "eslint": "^9.10.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-deprecation": "^3.0.0",
-    "eslint-plugin-jest": "^28.6.0",
-    "eslint-plugin-jsonc": "^2.16.0",
+    "eslint-plugin-jsonc": "^3.2.0",
     "eslint-plugin-prettier": "^5.1.3",
-    "eslint-plugin-unused-imports": "^3.2.0",
-    "glob": "^10.4.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^15.9.0",
     "husky": "^9.0.11",
     "jsonc-eslint-parser": "^2.4.0",
     "lint-staged": "^15.2.5",
     "prettier": "^3.3.1",
     "prettier-plugin-packagejson": "^2.5.0",
     "semantic-release": "^23.1.1",
-    "ts-loader": "^9.2.3",
-    "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
-    "tsconfig-paths": "^4.2.0",
     "tslib": "^2.6.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.6.0",
+    "vitest": "^2.0.5"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

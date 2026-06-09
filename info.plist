@@ -21,6 +21,29 @@
 				<false/>
 			</dict>
 		</array>
+		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>B6F11354-AE5F-45CA-85AD-E353AF2150BD</key>
 		<array>
 			<dict>
@@ -71,31 +94,51 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>action</key>
-				<integer>0</integer>
-				<key>argument</key>
-				<integer>0</integer>
-				<key>focusedappvariable</key>
+				<key>alfredfiltersresults</key>
 				<false/>
-				<key>focusedappvariablename</key>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>company</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching companies…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/company.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
 				<string></string>
-				<key>hotkey</key>
-				<integer>0</integer>
-				<key>hotmod</key>
-				<integer>0</integer>
-				<key>leftcursor</key>
-				<false/>
-				<key>modsmode</key>
-				<integer>0</integer>
-				<key>relatedAppsMode</key>
-				<integer>0</integer>
+				<key>subtext</key>
+				<string>Find a company · ⏎ opens in Attio · ⌘⏎ opens the website</string>
+				<key>title</key>
+				<string>Company</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.trigger.hotkey</string>
+			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>028ACD78-4D6D-4AE8-ACBA-14BBB359D13D</string>
+			<string>B4760792-AF43-4BAD-8098-E973611BC9E5</string>
 			<key>version</key>
-			<integer>2</integer>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -268,6 +311,35 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>hotkey</key>
+				<integer>0</integer>
+				<key>hotmod</key>
+				<integer>0</integer>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>028ACD78-4D6D-4AE8-ACBA-14BBB359D13D</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -325,9 +397,9 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 		<key>028ACD78-4D6D-4AE8-ACBA-14BBB359D13D</key>
 		<dict>
 			<key>xpos</key>
-			<real>360</real>
+			<real>325</real>
 			<key>ypos</key>
-			<real>40</real>
+			<real>400</real>
 		</dict>
 		<key>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</key>
 		<dict>
@@ -342,6 +414,13 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<real>600</real>
 			<key>ypos</key>
 			<real>380</real>
+		</dict>
+		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
+		<dict>
+			<key>xpos</key>
+			<real>595</real>
+			<key>ypos</key>
+			<real>20</real>
 		</dict>
 		<key>B6F11354-AE5F-45CA-85AD-E353AF2150BD</key>
 		<dict>

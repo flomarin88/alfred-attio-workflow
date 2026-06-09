@@ -18,7 +18,8 @@ import type { ConfigStore, Identity } from '@common/attio/identity'
 import type { RecordItem, Task } from '@common/attio/schemas'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
-import { type WorkflowError, errorRow } from '@common/error'
+import { persistWorkflowError } from '@common/diag-state'
+import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { createNotify } from '@common/notify'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
@@ -60,17 +61,18 @@ import { Variables } from '@common/variables.enum'
 
     const identityResult = await auth.assertCurrent()
     if (!identityResult.ok) {
-      emitError(alfredClient, strings, identityResult.error)
+      handleError(alfredClient, strings, config, '/v2/self', identityResult.error)
       return
     }
     const identity: Identity = identityResult.data
 
-    const tasksResult = await client.listTasks({
+    const tasksFilter = {
       assigneeWorkspaceMemberId: identity.workspaceMemberId,
       isCompleted: false,
-    })
+    }
+    const tasksResult = await client.listTasks(tasksFilter)
     if (!tasksResult.ok) {
-      emitError(alfredClient, strings, tasksResult.error)
+      handleError(alfredClient, strings, config, '/v2/tasks', tasksResult.error, { filter: tasksFilter })
       return
     }
 
@@ -168,7 +170,18 @@ function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typ
   alfredClient.output(toScriptFilter(rows))
 }
 
-function emitError(alfredClient: FastAlfred, strings: Strings, error: WorkflowError): void {
+function handleError(
+  alfredClient: FastAlfred,
+  strings: Strings,
+  config: ConfigStore,
+  endpoint: string,
+  error: WorkflowError,
+  extra: Record<string, unknown> = {},
+): void {
+  persistWorkflowError(config, endpoint, error)
+  alfredClient.log(
+    `[todo] kind=${error.kind} endpoint=${endpoint} params=${JSON.stringify(errorParams(error))} extra=${JSON.stringify(extra)}`,
+  )
   const spec = errorRow(error)
   const row: TodoRow = {
     uid: spec.uid,

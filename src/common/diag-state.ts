@@ -88,3 +88,19 @@ export function readLastError(config: ConfigStore): DiagLastError | undefined {
 export function clearLastError(config: ConfigStore): void {
   config.delete(KEY)
 }
+
+/**
+ * Convenience wrapper used by keyword scripts on error paths. Extracts
+ * `httpStatus` from a WorkflowError-like object (any variant that
+ * carries one) and persists the last-error record. Logs nothing — the
+ * caller is in charge of sending a free-form line to `alfredClient.log`
+ * when extra detail is useful.
+ */
+export function persistWorkflowError(
+  config: ConfigStore,
+  endpoint: string,
+  error: { kind: string; httpStatus?: number; cause?: string } & Record<string, unknown>,
+): void {
+  const httpStatus = typeof error.httpStatus === 'number' ? error.httpStatus : undefined
+  recordLastError(config, { endpoint, httpStatus })
+}

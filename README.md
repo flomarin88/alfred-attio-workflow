@@ -16,14 +16,15 @@ Search and act on your [Attio](https://attio.com) CRM records straight from the 
 
 ## Keywords
 
-| Keyword          | What it does                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `todo`           | Today's open tasks assigned to you (overdue first), with `who · when` subtitles.                       |
-| `person <query>` | Search people by name; ⏎ opens the record in Attio, ⌘⏎ opens LinkedIn when present.                    |
-| `attio:diag`     | A copy-safe diagnostic snapshot (workspace, token presence, cache ages, last error, workflow version). |
-| `attio:refresh`  | Wipe every cache, re-fetch identity + object schemas, scrub Quick Look HTML.                           |
+| Keyword           | What it does                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `todo`            | Today's open tasks assigned to you (overdue first), with `who · when` subtitles.                       |
+| `person <query>`  | Search people by name; ⏎ opens the record in Attio, ⌘⏎ opens LinkedIn when present.                    |
+| `company <query>` | Search companies by name; ⏎ opens the record in Attio, ⌘⏎ opens the company website when on record.    |
+| `attio:diag`      | A copy-safe diagnostic snapshot (workspace, token presence, cache ages, last error, workflow version). |
+| `attio:refresh`   | Wipe every cache, re-fetch identity + object schemas, scrub Quick Look HTML.                           |
 
-> Epics 2-5 will add `company`, `deal`, drill-down record edits, notes / task creation, and Quick Look. See [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
+> Epics 2-5 will add `deal`, drill-down record edits, notes / task creation, and Quick Look. See [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
 
 ---
 

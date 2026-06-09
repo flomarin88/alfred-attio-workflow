@@ -39,5 +39,9 @@
   "search.empty.people.subtitle": "Query: {query}",
   "person.mod.linkedin.subtitle": "Open LinkedIn profile",
   "person.mod.fallback.subtitle": "Open in Attio (no LinkedIn)",
-  "person.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ falls back when LinkedIn is missing (last reminder)"
+  "person.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ falls back when LinkedIn is missing (last reminder)",
+  "search.empty.companies.title": "No companies found",
+  "search.empty.companies.subtitle": "Query: {query}",
+  "company.mod.website.subtitle": "Open {domain}",
+  "company.mod.fallback.subtitle": "Open in Attio (no website on record)"
 }

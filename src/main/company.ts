@@ -1,16 +1,12 @@
 /**
- * Keyword entry: `person <query>`. Story 2.1.
+ * Keyword entry: `company <query>`. Story 2.2.
  *
  *  1. Resolve auth (PAT + identity).
- *  2. Query people via `client.queryRecords('people', body)`. Empty query
- *     → recently-updated; non-empty → substring match on name (FR-012).
- *  3. Collect linked-company record IDs, fetch their display names so
- *     the subtitle can show `{job_title} · {company_name}` (FR-013).
- *  4. Read `cmd_enter_hint_dismissed`; pass to builder so the cmd-mod
- *     subtitle warns the user the first time ⌘⏎ falls back to Attio
- *     (FR-015).
- *  5. Output rows; if the hint was shown, persist the dismissal flag so
- *     subsequent invocations stay silent.
+ *  2. Query companies. Empty query → recently-updated; non-empty →
+ *     substring match on the name attribute.
+ *  3. Hand the records to `buildCompanyRows` — subtitle is domain
+ *     (preferred) or location (fallback), and ⌘⏎ opens the company's
+ *     website URL when present.
  */
 import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
@@ -18,16 +14,14 @@ import { AttioClient } from '@common/attio/client'
 import type { ConfigStore, Identity } from '@common/attio/identity'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
+import { type CompanyRow, buildCompanyRows } from '@common/company'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
 import { persistWorkflowError } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { createNotify } from '@common/notify'
-import { type PersonRow, buildPersonRows, extractCompanyId, hasMissingLinkedIn } from '@common/person'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
 import { Variables } from '@common/variables.enum'
-
-const HINT_FLAG = 'cmd_enter_hint_dismissed'
 
 ;(async () => {
   const alfredClient = new FastAlfred()
@@ -41,14 +35,7 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const query = (alfredClient.input ?? '').trim()
 
     if (!pat) {
-      emit(alfredClient, strings, {
-        identity: undefined,
-        records: [],
-        companyNames: new Map(),
-        query,
-        patPresent: false,
-        showLinkedInHint: false,
-      })
+      emit(alfredClient, strings, { identity: undefined, records: [], query, patPresent: false })
       return
     }
 
@@ -71,32 +58,19 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const identity: Identity = identityResult.data
 
     const queryBody = buildQueryBody(query)
-    const queryEndpoint = '/v2/objects/people/records/query'
-    const result = await client.queryRecords('people', queryBody)
+    const queryEndpoint = '/v2/objects/companies/records/query'
+    const result = await client.queryRecords('companies', queryBody)
     if (!result.ok) {
       handleError(alfredClient, strings, config, queryEndpoint, result.error, { body: queryBody })
       return
     }
 
-    const companyNames = await resolveCompanyNames(client, result.data)
-
-    const hintDismissed = config.get(HINT_FLAG) === true
-    const showLinkedInHint = !hintDismissed && hasMissingLinkedIn(result.data)
-
     emit(alfredClient, strings, {
       identity,
       records: result.data,
-      companyNames,
       query,
       patPresent: true,
-      showLinkedInHint,
     })
-
-    if (showLinkedInHint) {
-      // Persist immediately — the first render IS the hint. Subsequent
-      // invocations stay silent on the fallback cmd subtitle.
-      config.set(HINT_FLAG, true)
-    }
   } catch (error) {
     alfredClient.error(error as Error)
   }
@@ -107,73 +81,26 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
 // ---------------------------------------------------------------------------
 
 function buildQueryBody(query: string): Record<string, unknown> {
-  const baseSorts = [{ direction: 'desc', attribute: 'last_setting_action_at' }]
+  // `created_at` is universal across every Attio object — safer than
+  // `last_setting_action_at` (which can be people-specific depending on
+  // the workspace's attribute setup).
+  const baseSorts = [{ direction: 'desc', attribute: 'created_at' }]
   if (query === '') {
     return { sorts: baseSorts, limit: DEFAULT_RESULT_LIMIT }
   }
   return {
-    filter: {
-      $or: [
-        { name: { full_name: { $contains: query } } },
-        { name: { first_name: { $contains: query } } },
-        { name: { last_name: { $contains: query } } },
-      ],
-    },
+    filter: { name: { $contains: query } },
     sorts: baseSorts,
     limit: DEFAULT_RESULT_LIMIT,
   }
 }
 
 // ---------------------------------------------------------------------------
-// Company-name resolution
-// ---------------------------------------------------------------------------
-
-async function resolveCompanyNames(
-  client: AttioClient,
-  records: Awaited<ReturnType<AttioClient['queryRecords']>> extends infer R
-    ? R extends { ok: true; data: infer D }
-      ? D
-      : never
-    : never,
-): Promise<Map<string, string>> {
-  const uniqueIds = new Set<string>()
-  for (const record of records) {
-    const id = extractCompanyId(record)
-    if (id) uniqueIds.add(id)
-  }
-
-  const out = new Map<string, string>()
-  await Promise.all(
-    [...uniqueIds].map(async (id) => {
-      const result = await client.getRecord('companies', id)
-      if (!result.ok) return
-      const name = extractCompanyName(result.data)
-      if (name) out.set(id, name)
-    }),
-  )
-  return out
-}
-
-function extractCompanyName(
-  record: Awaited<ReturnType<AttioClient['getRecord']>> extends infer R
-    ? R extends { ok: true; data: infer D }
-      ? D
-      : never
-    : never,
-): string | undefined {
-  const arr = (record.values as Record<string, unknown>).name as Array<Record<string, unknown>> | undefined
-  const first = arr?.[0]
-  if (!first) return undefined
-  const value = first.value
-  return typeof value === 'string' && value.length > 0 ? value : undefined
-}
-
-// ---------------------------------------------------------------------------
 // Output helpers
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildPersonRows>[0]): void {
-  const rows = buildPersonRows(inputs, strings)
+function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildCompanyRows>[0]): void {
+  const rows = buildCompanyRows(inputs, strings)
   alfredClient.output(toScriptFilter(rows))
 }
 
@@ -187,10 +114,10 @@ function handleError(
 ): void {
   persistWorkflowError(config, endpoint, error)
   alfredClient.log(
-    `[person] kind=${error.kind} endpoint=${endpoint} params=${JSON.stringify(errorParams(error))} extra=${JSON.stringify(extra)}`,
+    `[company] kind=${error.kind} endpoint=${endpoint} params=${JSON.stringify(errorParams(error))} extra=${JSON.stringify(extra)}`,
   )
   const spec = errorRow(error)
-  const row: PersonRow = {
+  const row: CompanyRow = {
     uid: spec.uid,
     title: strings.t(spec.title, spec.params),
     subtitle: strings.t(spec.subtitle, spec.params),
@@ -201,7 +128,7 @@ function handleError(
   alfredClient.output(toScriptFilter([row]))
 }
 
-function toScriptFilter(rows: PersonRow[]): AlfredScriptFilter {
+function toScriptFilter(rows: CompanyRow[]): AlfredScriptFilter {
   const iconRegistry = createIconRegistry({ bundleDir: process.cwd() })
   const buildRow = createRowBuilder(iconRegistry)
   const items = rows.map((spec) =>

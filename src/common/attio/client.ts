@@ -255,6 +255,33 @@ export class AttioClient {
     return parsed
   }
 
+  /**
+   * Fetches a single record by `(slug, id)`. Story 1.10 needs this for
+   * linked-record name resolution in the `todo` keyword; future stories
+   * (Quick Look, edit-action drill-down) consume it as well.
+   *
+   * On 404 the WorkflowError is enriched with the caller's `slug`/`id`
+   * — the internal `request` returns empty strings, but `getRecord`
+   * knows the context.
+   */
+  async getRecord(slug: string, id: string): Promise<Result<RecordItem, WorkflowError>> {
+    const cached = this.cache.getRecord<RecordItem>(slug, id)
+    if (cached) return ok(cached)
+
+    const raw = await this.request('GET', `/v2/objects/${encodeURIComponent(slug)}/records/${encodeURIComponent(id)}`)
+    if (!raw.ok) {
+      if (raw.error.kind === 'record-not-found') {
+        return err<WorkflowError>({ kind: 'record-not-found', httpStatus: 404, slug, id })
+      }
+      return raw
+    }
+    // GET /v2/objects/{slug}/records/{id} returns `{ data: Record }`.
+    const envelope = raw.data as { data?: unknown } | null
+    const parsed = parseWith(RecordSchema, envelope?.data)
+    if (parsed.ok) this.cache.setRecord(slug, id, parsed.data)
+    return parsed
+  }
+
   async queryRecords(slug: string, body: unknown): Promise<Result<RecordItem[], WorkflowError>> {
     const queryHash = hashFilter({ slug, body })
     const cached = this.cache.getList<RecordItem>(slug, queryHash)

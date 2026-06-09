@@ -5,10 +5,13 @@
  * Build Lucide PNG icons for the Alfred row icon registry.
  *
  * For each named icon, emits 4 variants:
- *   - <name>.png         (light theme,  14×14)
- *   - <name>@2x.png      (light theme,  28×28)
- *   - <name>@dark.png    (dark theme,   14×14)
- *   - <name>@2x@dark.png (dark theme,   28×28)
+ *   - <name>.png         (light theme,  64×64)
+ *   - <name>@2x.png      (light theme,  128×128)
+ *   - <name>@dark.png    (dark theme,   64×64)
+ *   - <name>@2x@dark.png (dark theme,   128×128)
+ *
+ * Alfred row icons display at ~32 logical px (so 64px @2x retina). Rendering
+ * larger than the displayed size keeps the icon crisp; smaller sizes pixelate.
  *
  * Lucide is fetched from Iconify's CDN (mirrors the official Lucide set, ISC
  * licensed). @resvg/resvg-js rasterizes the SVG → PNG with no native deps.
@@ -51,10 +54,9 @@ async function fetchSvg(lucideName, color) {
 }
 
 function rasterize(svg, sizePx) {
-  // Lucide icons are 24×24 viewBox at stroke-width 2. To match DESIGN.md's
-  // "14×14 visual on a 16×16 canvas at stroke-width 1.5" register, we render
-  // the 24×24 source down to the requested size — the visual feel matches
-  // closely enough at 14px to satisfy UX-DR2 in V1.
+  // Lucide icons are 24×24 viewBox at stroke-width 2. We render up to
+  // Alfred's display register (~64-128px). Rendering at native resolution
+  // and letting Alfred downscale keeps strokes crisp on Retina.
   const resvg = new Resvg(svg, {
     fitTo: { mode: 'width', value: sizePx },
     background: 'rgba(0,0,0,0)',
@@ -67,10 +69,10 @@ async function buildOne(name, lucideName) {
   const svgDark = await fetchSvg(lucideName, INK_DARK)
 
   const targets = [
-    [`${name}.png`, svgLight, 14],
-    [`${name}@2x.png`, svgLight, 28],
-    [`${name}@dark.png`, svgDark, 14],
-    [`${name}@2x@dark.png`, svgDark, 28],
+    [`${name}.png`, svgLight, 64],
+    [`${name}@2x.png`, svgLight, 128],
+    [`${name}@dark.png`, svgDark, 64],
+    [`${name}@2x@dark.png`, svgDark, 128],
   ]
 
   for (const [filename, svg, size] of targets) {

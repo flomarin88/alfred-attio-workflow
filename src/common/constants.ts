@@ -8,6 +8,15 @@
 /** Attio API base URL. */
 export const API_BASE_URL = 'https://api.attio.com'
 
+/** Web base for opening records in the Attio app. */
+export const ATTIO_APP_BASE_URL = 'https://app.attio.com'
+
+/**
+ * README anchor opened by the setup-prompt row (FR-022 / FR-023). The
+ * `#setup` fragment points at the README's PAT-setup section.
+ */
+export const README_SETUP_URL = 'https://github.com/flomarin88/alfred-attio-workflow#setup'
+
 /** Default Alfred result-list cap. Matches FR-011 and the existing `people.ts`. */
 export const DEFAULT_RESULT_LIMIT = 9
 

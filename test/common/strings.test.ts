@@ -197,6 +197,10 @@ describe('strings — seeded EN catalog matches Story 1.2 errorRow keys', () => 
   })
 
   it('en.json has the empty-todo line (FR-008)', () => {
-    expect((enCatalog as Record<string, string>)['todo.empty.title']).toContain('{workspace_member_name}')
+    // V1 ships without member-name interpolation — `/v2/self` does not return
+    // the authorized member's display name, and a follow-up Story will add a
+    // dedicated probe. Until then the empty-state copy is name-free.
+    expect((enCatalog as Record<string, string>)['todo.empty.title']).toBe('No tasks due today')
+    expect((enCatalog as Record<string, string>)['todo.empty.subtitle']).toBe("You're all caught up")
   })
 })

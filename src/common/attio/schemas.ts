@@ -74,14 +74,24 @@ export type AttributeDef = z.infer<typeof AttributeDefSchema>
 // /v2/tasks — task list
 // ---------------------------------------------------------------------------
 
-const LinkedRecordRefSchema = z.object({
-  target_object: z.string(),
-  target_record_id: z.string(),
-})
+/**
+ * Attio's `/v2/tasks` returns polymorphic actor refs for assignees
+ * (`referenced_actor_type` + `referenced_actor_id`) and may name the
+ * linked-record fields either `target_object`/`target_record_id` (slug
+ * form) or `target_object_id`/`target_record_id` (UUID form). The
+ * schema accepts every shape with `.passthrough()` so a wire variant
+ * never crashes the parse; the transform extracts what it can and
+ * silently drops what it cannot.
+ */
+const PermissiveRefSchema = z.object({}).passthrough()
 
-const AssigneeRefSchema = z.object({
-  workspace_member_id: z.string(),
-})
+function readString(obj: Record<string, unknown>, ...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = obj[key]
+    if (typeof value === 'string' && value.length > 0) return value
+  }
+  return undefined
+}
 
 export const TaskSchema = z
   .object({
@@ -89,8 +99,8 @@ export const TaskSchema = z
     content_plaintext: z.string().nullish(),
     deadline_at: z.string().nullish(),
     is_completed: z.boolean(),
-    assignees: z.array(AssigneeRefSchema).optional(),
-    linked_records: z.array(LinkedRecordRefSchema).optional(),
+    assignees: z.array(PermissiveRefSchema).optional(),
+    linked_records: z.array(PermissiveRefSchema).optional(),
     created_at: z.string().optional(),
   })
   .passthrough()
@@ -99,11 +109,27 @@ export const TaskSchema = z
     content: raw.content_plaintext ?? '',
     deadlineAt: raw.deadline_at ?? undefined,
     isCompleted: raw.is_completed,
-    assigneeIds: (raw.assignees ?? []).map((a) => a.workspace_member_id),
-    linkedRecords: (raw.linked_records ?? []).map((l) => ({
-      targetObject: l.target_object,
-      targetRecordId: l.target_record_id,
-    })),
+    assigneeIds: (raw.assignees ?? [])
+      .map((a) => {
+        const obj = a as Record<string, unknown>
+        // Try the legacy field name first, then the polymorphic-actor pattern.
+        const id = readString(obj, 'workspace_member_id', 'referenced_actor_id')
+        // For the actor variant, only keep workspace members (filter out
+        // system / api-token actors — those don't render in `Me` flows).
+        const actorType = readString(obj, 'referenced_actor_type')
+        if (actorType && actorType !== 'workspace-member') return undefined
+        return id
+      })
+      .filter((v): v is string => typeof v === 'string'),
+    linkedRecords: (raw.linked_records ?? [])
+      .map((l) => {
+        const obj = l as Record<string, unknown>
+        const targetObject = readString(obj, 'target_object', 'target_object_id', 'object_id')
+        const targetRecordId = readString(obj, 'target_record_id', 'record_id')
+        if (!targetObject || !targetRecordId) return undefined
+        return { targetObject, targetRecordId }
+      })
+      .filter((v): v is { targetObject: string; targetRecordId: string } => v !== undefined),
     createdAt: raw.created_at ?? '',
   }))
 

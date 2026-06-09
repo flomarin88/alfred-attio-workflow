@@ -494,6 +494,38 @@ describe('AttioClient.listTasks', () => {
     })
   })
 
+  it('accepts the actor-pattern shape (referenced_actor_type + referenced_actor_id) for assignees', async () => {
+    const ACTOR_WIRE = {
+      data: [
+        {
+          id: { task_id: 'task_actor' },
+          content_plaintext: 'Polymorphic assignee',
+          deadline_at: '2026-07-01T12:00:00.000Z',
+          is_completed: false,
+          assignees: [
+            { referenced_actor_type: 'workspace-member', referenced_actor_id: 'mem_actor' },
+            { referenced_actor_type: 'api-token', referenced_actor_id: 'tok_bot' }, // dropped — not a member
+          ],
+          linked_records: [{ object_id: 'companies', record_id: 'comp_acme' }],
+          created_at: '2026-06-01T08:00:00.000Z',
+        },
+      ],
+    }
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, ACTOR_WIRE))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.listTasks()
+    expect(result).toMatchObject({
+      ok: true,
+      data: [
+        {
+          id: 'task_actor',
+          assigneeIds: ['mem_actor'],
+          linkedRecords: [{ targetObject: 'companies', targetRecordId: 'comp_acme' }],
+        },
+      ],
+    })
+  })
+
   it('uses different cache keys for different filters', async () => {
     const fetchImpl = vi
       .fn()
@@ -573,5 +605,63 @@ describe('AttioClient.queryRecords', () => {
     await client.queryRecords('people', { b: 2, a: 1 })
     // Same content → cache hit on the second call.
     expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// AttioClient.getRecord — Story 1.10 addition
+// ---------------------------------------------------------------------------
+
+describe('AttioClient.getRecord', () => {
+  const SINGLE_RECORD_WIRE = {
+    data: {
+      id: { record_id: 'rec_jane' },
+      web_url: 'https://app.attio.com/x/people/rec_jane',
+      values: { name: [{ full_name: 'Jane Doe' }] },
+      created_at: '2026-05-01T10:00:00.000Z',
+    },
+  }
+
+  it('fetches and parses a single record from GET /v2/objects/{slug}/records/{id}', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, SINGLE_RECORD_WIRE))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.getRecord('people', 'rec_jane')
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.attio.test/v2/objects/people/records/rec_jane')
+    expect(result).toMatchObject({
+      ok: true,
+      data: { id: 'rec_jane', values: { name: [{ full_name: 'Jane Doe' }] } },
+    })
+  })
+
+  it('caches on success and serves the next call from cache', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, SINGLE_RECORD_WIRE))
+    const { client } = makeClient(fetchImpl)
+    await client.getRecord('people', 'rec_jane')
+    await client.getRecord('people', 'rec_jane')
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
+  it('enriches a 404 record-not-found with the caller-supplied slug + id', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(404, {}))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.getRecord('people', 'rec_missing')
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'record-not-found', httpStatus: 404, slug: 'people', id: 'rec_missing' },
+    })
+  })
+
+  it('URL-encodes slug and id', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, SINGLE_RECORD_WIRE))
+    const { client } = makeClient(fetchImpl)
+    await client.getRecord('odd slug', 'id/with/slash')
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.attio.test/v2/objects/odd%20slug/records/id%2Fwith%2Fslash')
+  })
+
+  it('forwards non-404 errors verbatim', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(401, {}))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.getRecord('people', 'r1')
+    expect(result).toEqual({ ok: false, error: { kind: 'auth-invalid', httpStatus: 401 } })
   })
 })

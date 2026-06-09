@@ -30,5 +30,6 @@
   "diag.token.missing": "Token: missing",
   "diag.cache.title": "Cache age",
   "diag.lastError.title": "Last error",
-  "diag.version.title": "Workflow version"
+  "diag.version.title": "Workflow version",
+  "refresh.success.title": "Cache cleared — {object_count} objects, {attribute_set_count} attribute sets"
 }

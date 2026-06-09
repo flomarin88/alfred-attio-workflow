@@ -1,0 +1,22 @@
+{
+  "setup.title": "Attio API token not configured",
+  "setup.subtitle": "⏎ for setup instructions",
+  "connection.success": "Connected to {workspace_name}",
+  "connection.disclaimer": "Unofficial workflow for Attio — not affiliated with Attio Inc.",
+  "errors.auth-invalid.title": "Token invalid — update token in Alfred preferences",
+  "errors.auth-invalid.subtitle": "Alfred → Workflows → Attio → Configure",
+  "errors.auth-scope-missing.title": "Token lacks the required scope",
+  "errors.auth-scope-missing.subtitle": "Regenerate the PAT with write permissions",
+  "errors.record-not-found.title": "Record no longer exists in Attio",
+  "errors.record-not-found.subtitle": "{slug} · {id}",
+  "errors.validation.title": "{attioMessage}",
+  "errors.validation.subtitle": "",
+  "errors.rate-limit.title": "Attio rate-limit reached",
+  "errors.rate-limit.subtitle": "Try again in {retryAfter}s",
+  "errors.unreachable.title": "Attio is unreachable",
+  "errors.unreachable.subtitle": "Try again later",
+  "errors.unknown.title": "Something went wrong",
+  "errors.unknown.subtitle": "Run attio:diag for details",
+  "todo.empty.title": "No tasks due today for {workspace_member_name}",
+  "todo.empty.subtitle": ""
+}

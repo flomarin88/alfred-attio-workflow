@@ -1,6 +1,6 @@
 import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
-import { AttioClient } from '@common/attio/client'
+import { AttioClient } from '@common/attio/client.legacy'
 import { Variables } from '@common/variables.enum'
 
 type CompanyMap = Record<string, string>

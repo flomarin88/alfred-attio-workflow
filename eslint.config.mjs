@@ -168,9 +168,11 @@ export default tseslint.config(
   },
 
   // Default no-fetch elsewhere (except client.ts which is explicitly allowed).
+  // The brownfield client.legacy.ts is also exempt — it predates the boundary
+  // and gets retired in Epic 2 with the rest of the people.ts brownfield.
   {
     files: ['src/**/*.ts'],
-    ignores: ['src/common/attio/client.ts'],
+    ignores: ['src/common/attio/client.ts', 'src/common/attio/client.legacy.ts'],
     rules: NO_FETCH_OUTSIDE_CLIENT,
   },
 

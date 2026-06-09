@@ -107,9 +107,10 @@ export async function probeIdentity(token: string, prober: IdentityProber): Prom
 
   const parsed = IdentitySchema.safeParse(probed.data)
   if (!parsed.success) {
+    // Zod parse failures surface as `validation` without httpStatus, distinct
+    // from an Attio 422 (FR-051 / Story 1.7 contract).
     return err<WorkflowError>({
       kind: 'validation',
-      httpStatus: 422,
       attioMessage: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
     })
   }

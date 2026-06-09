@@ -47,7 +47,7 @@ export type WorkflowError =
   | { kind: 'auth-invalid'; httpStatus: 401 }
   | { kind: 'auth-scope-missing'; httpStatus: 403; fieldSlug?: string }
   | { kind: 'record-not-found'; httpStatus: 404; slug: string; id: string }
-  | { kind: 'validation'; httpStatus: 422; attioMessage: string; fieldSlug?: string }
+  | { kind: 'validation'; httpStatus?: 422; attioMessage: string; fieldSlug?: string }
   | { kind: 'rate-limit'; httpStatus: 429; retryAfter: number }
   | { kind: 'unreachable'; cause?: 'socket' | 'http-5xx' }
   | { kind: 'unknown'; httpStatus?: number; raw?: string }

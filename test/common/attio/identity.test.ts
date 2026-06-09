@@ -142,14 +142,16 @@ describe('probeIdentity — orchestration', () => {
     expect(result).toEqual({ ok: false, error: transportErr })
   })
 
-  it('returns kind: "validation" with field paths on schema mismatch', async () => {
+  it('returns kind: "validation" with field paths on schema mismatch (no httpStatus — client-side parse)', async () => {
     const prober: IdentityProber = async () => ok<unknown>({ workspace_id: 42 })
     const result = await probeIdentity('pat_x', prober)
-    expect(result).toMatchObject({
+    // `toEqual` rejects extra keys, so the absence of `httpStatus` is verified
+    // structurally here — distinguishing client-side parse failures from Attio 422
+    // (FR-051 / Story 1.7).
+    expect(result).toEqual({
       ok: false,
       error: {
         kind: 'validation',
-        httpStatus: 422,
         attioMessage: expect.stringContaining('workspace_id'),
       },
     })

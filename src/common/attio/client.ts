@@ -1,158 +1,269 @@
 /**
- * Attio: POST /v2/objects/people/records/query
- * Node 18+ (global fetch). If you're on Node <18, install `undici` and polyfill fetch.
+ * AttioClient — Story 1.7 read paths.
+ *
+ * - Public `request(method, path, body?)` returns raw response data; the
+ *   `IdentityProber` contract from Story 1.6 consumes this directly.
+ * - Typed wrappers (`getSelf`, `listObjects`, `getObjectAttributes`,
+ *   `listTasks`, `queryRecords`) parse the response with a zod schema,
+ *   integrate the cache layer, and return `Result<T, WorkflowError>`.
+ * - NFR-005 retry: one retry on HTTP 429 (sleep per `Retry-After`) and
+ *   on HTTP 5xx / socket failure (sleep `RETRY_INITIAL_DELAY_MS`). A
+ *   second failure surfaces as `rate-limit` or `unreachable`.
+ * - FR-051 status mapping: 401/403/404/422 → corresponding WorkflowError
+ *   kinds; zod parse failures → `validation` WITHOUT httpStatus.
+ *
+ * This is the ONLY file in the project allowed to import the global
+ * `fetch` — see `eslint.config.mjs` boundary rules.
  */
+import { createHash } from 'node:crypto'
+import type { z } from 'zod'
+import type { Cache } from '../cache'
+import { API_BASE_URL, RETRY_INITIAL_DELAY_MS, RETRY_MAX_DELAY_MS } from '../constants'
+import { type Result, type WorkflowError, err, ok } from '../error'
+import { type Identity, IdentitySchema } from './identity'
+import {
+  type AttributeDef,
+  AttributeDefSchema,
+  type ObjectInfo,
+  ObjectInfoSchema,
+  type RecordItem,
+  RecordSchema,
+  type Task,
+  TaskSchema,
+  listResponseSchema,
+} from './schemas'
 
-type SortDirection = 'asc' | 'desc'
+// ---------------------------------------------------------------------------
+// Types + options
+// ---------------------------------------------------------------------------
 
-type SortByAttribute = {
-  direction: SortDirection
-  attribute: string // slug or attribute id
-  field?: string // e.g. "last_name" when sorting by "name"
+export interface AttioClientOptions {
+  accessToken: string
+  cache: Cache
+  /** Override the API base URL (for testing). */
+  baseUrl?: string
+  /** Override fetch (for testing). Defaults to `globalThis.fetch`. */
+  fetch?: typeof globalThis.fetch
+  /** Override sleep (for testing retry path). Defaults to setTimeout. */
+  sleep?: (ms: number) => Promise<void>
 }
 
-type SortByPath = {
-  direction: SortDirection
-  path: Array<[string, string]> // e.g. [['sales','parent_record'], ['companies','name']]
-  field?: string
+export interface TaskFilter {
+  assigneeWorkspaceMemberId?: string
+  isCompleted?: boolean
 }
 
-type PeopleQueryRequest = {
-  filter?: Record<string, unknown> // Attio filter DSL (shorthand or verbose)
-  sorts?: Array<SortByAttribute | SortByPath>
-  limit?: number // default 500
-  offset?: number // default 0
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+const DEFAULT_SLEEP = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
+  const obj = value as Record<string, unknown>
+  const keys = Object.keys(obj).sort()
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`
 }
 
-type AttioRecordId = {
-  workspace_id: string // uuid
-  object_id: string // uuid
-  record_id: string // uuid
+function hashFilter(value: unknown): string {
+  return createHash('sha256').update(stableStringify(value)).digest('hex').slice(0, 16)
 }
 
-type AttioRecord = {
-  id: AttioRecordId
-  created_at: string // ISO datetime string
-  web_url: string
-  values: Record<string, unknown> // keyed by attribute slug
+function parseRetryAfter(header: string | null): number {
+  if (!header) return 1
+  const seconds = Number.parseInt(header, 10)
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : 1
 }
 
-type PeopleQueryResponse = {
-  data: AttioRecord[]
-}
-
-type GetRecordResponse = {
-  data: AttioRecord
-}
-
-type AttioErrorResponse = {
-  status_code: number
-  type: string
-  code: string
-  message: string
-}
-
-class AttioApiError extends Error {
-  public readonly status: number
-  public readonly code?: string
-  public readonly type?: string
-
-  constructor(message: string, status: number, meta?: { code?: string; type?: string }) {
-    super(message)
-    this.name = 'AttioApiError'
-    this.status = status
-    this.code = meta?.code
-    this.type = meta?.type
+async function safeJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json()
+  } catch {
+    return null
   }
 }
+
+function extractAttioMessage(body: unknown): string {
+  if (typeof body === 'object' && body !== null) {
+    const obj = body as Record<string, unknown>
+    if (typeof obj.message === 'string') return obj.message
+    if (typeof obj.error === 'string') return obj.error
+  }
+  return 'Validation failed'
+}
+
+function zodIssues(error: z.ZodError): string {
+  return error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
+}
+
+function parseWith<T extends z.ZodTypeAny>(schema: T, data: unknown): Result<z.infer<T>, WorkflowError> {
+  const parsed = schema.safeParse(data)
+  if (parsed.success) return ok(parsed.data)
+  return err<WorkflowError>({ kind: 'validation', attioMessage: zodIssues(parsed.error) })
+}
+
+function parseListWith<T extends z.ZodTypeAny>(itemSchema: T, data: unknown): Result<z.infer<T>[], WorkflowError> {
+  const envelope = listResponseSchema(itemSchema).safeParse(data)
+  if (envelope.success) return ok(envelope.data.data)
+  return err<WorkflowError>({ kind: 'validation', attioMessage: zodIssues(envelope.error) })
+}
+
+// ---------------------------------------------------------------------------
+// AttioClient
+// ---------------------------------------------------------------------------
 
 export class AttioClient {
-  private readonly baseUrl: string
   private readonly accessToken: string
+  private readonly cache: Cache
+  private readonly baseUrl: string
+  private readonly fetchImpl: typeof globalThis.fetch
+  private readonly sleep: (ms: number) => Promise<void>
 
-  constructor(opts: { accessToken: string; baseUrl?: string }) {
+  constructor(opts: AttioClientOptions) {
     this.accessToken = opts.accessToken
-    this.baseUrl = opts.baseUrl ?? 'https://api.attio.com'
+    this.cache = opts.cache
+    this.baseUrl = opts.baseUrl ?? API_BASE_URL
+    this.fetchImpl = opts.fetch ?? globalThis.fetch.bind(globalThis)
+    this.sleep = opts.sleep ?? DEFAULT_SLEEP
   }
 
   /**
-   * Lists people records with optional filter/sorts/pagination.
+   * Public raw request — used by typed wrappers below and by auth.ts's
+   * IdentityProber wiring (Story 1.10 keyword scripts).
+   *
+   * Retries once on 429 (with `Retry-After`-based backoff) and on 5xx /
+   * socket failure (with `RETRY_INITIAL_DELAY_MS` backoff). Maps status
+   * codes to FR-051 `WorkflowError` kinds.
    */
-  async queryPeople(req: PeopleQueryRequest = {}): Promise<PeopleQueryResponse> {
-    const url = `${this.baseUrl}/v2/objects/people/records/query`
-
-    const res = await fetch(url, {
-      method: 'POST',
+  async request(method: string, path: string, body?: unknown): Promise<Result<unknown, WorkflowError>> {
+    const url = `${this.baseUrl}${path}`
+    const init: RequestInit = {
+      method,
       headers: {
-        authorization: `Bearer ${this.accessToken}`,
-        'content-type': 'application/json',
-        accept: 'application/json',
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(req),
-    })
-
-    const text = await res.text()
-    const json = text ? (JSON.parse(text) as unknown) : undefined
-
-    if (!res.ok) {
-      const err = json as Partial<AttioErrorResponse> | undefined
-      throw new AttioApiError(err?.message ?? `Attio API error (${res.status})`, res.status, {
-        code: err?.code,
-        type: err?.type,
-      })
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     }
 
-    return json as PeopleQueryResponse
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let response: Response
+      try {
+        response = await this.fetchImpl(url, init)
+      } catch {
+        if (attempt === 0) {
+          await this.sleep(RETRY_INITIAL_DELAY_MS)
+          continue
+        }
+        return err<WorkflowError>({ kind: 'unreachable', cause: 'socket' })
+      }
+
+      if (response.status === 429) {
+        if (attempt === 0) {
+          const retryAfterSeconds = parseRetryAfter(response.headers.get('Retry-After'))
+          await this.sleep(Math.min(retryAfterSeconds * 1000, RETRY_MAX_DELAY_MS))
+          continue
+        }
+        const retryAfter = parseRetryAfter(response.headers.get('Retry-After'))
+        return err<WorkflowError>({ kind: 'rate-limit', httpStatus: 429, retryAfter })
+      }
+
+      if (response.status >= 500) {
+        if (attempt === 0) {
+          await this.sleep(RETRY_INITIAL_DELAY_MS)
+          continue
+        }
+        return err<WorkflowError>({ kind: 'unreachable', cause: 'http-5xx' })
+      }
+
+      if (response.ok) {
+        return ok(await safeJson(response))
+      }
+
+      if (response.status === 401) return err<WorkflowError>({ kind: 'auth-invalid', httpStatus: 401 })
+      if (response.status === 403) return err<WorkflowError>({ kind: 'auth-scope-missing', httpStatus: 403 })
+      if (response.status === 404) {
+        return err<WorkflowError>({ kind: 'record-not-found', httpStatus: 404, slug: '', id: '' })
+      }
+      if (response.status === 422) {
+        const data = await safeJson(response)
+        return err<WorkflowError>({
+          kind: 'validation',
+          httpStatus: 422,
+          attioMessage: extractAttioMessage(data),
+        })
+      }
+
+      return err<WorkflowError>({ kind: 'unknown', httpStatus: response.status })
+    }
+
+    return err<WorkflowError>({ kind: 'unknown' })
   }
 
-  async getCompany(recordId: string): Promise<GetRecordResponse> {
-    const url = `${this.baseUrl}/v2/objects/companies/records/${recordId}`
+  // -------------------------------------------------------------------------
+  // Typed read methods
+  // -------------------------------------------------------------------------
 
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${this.accessToken}`,
-        'content-type': 'application/json',
-        accept: 'application/json',
-      },
-    })
-
-    const text = await res.text()
-    const json = text ? (JSON.parse(text) as unknown) : undefined
-
-    if (!res.ok) {
-      const err = json as Partial<AttioErrorResponse> | undefined
-      throw new AttioApiError(err?.message ?? `Attio API error (${res.status})`, res.status, {
-        code: err?.code,
-        type: err?.type,
-      })
-    }
-
-    return json as GetRecordResponse
+  async getSelf(): Promise<Result<Identity, WorkflowError>> {
+    const raw = await this.request('GET', '/v2/self')
+    if (!raw.ok) return raw
+    return parseWith(IdentitySchema, raw.data)
   }
 
-  /**
-   * Convenience helper to page through all results (offset pagination).
-   * Stops when the API returns fewer than `pageSize` records.
-   */
-  async queryAllPeople(opts: Omit<PeopleQueryRequest, 'limit' | 'offset'> & { pageSize?: number } = {}) {
-    const pageSize = opts.pageSize ?? 500
-    const out: AttioRecord[] = []
-    let offset = 0
+  async listObjects(): Promise<Result<ObjectInfo[], WorkflowError>> {
+    const cached = this.cache.getObjects<ObjectInfo[]>()
+    if (cached) return ok(cached)
 
-    for (;;) {
-      const page = await this.queryPeople({
-        filter: opts.filter,
-        sorts: opts.sorts,
-        limit: pageSize,
-        offset,
-      })
+    const raw = await this.request('GET', '/v2/objects')
+    if (!raw.ok) return raw
+    const parsed = parseListWith(ObjectInfoSchema, raw.data)
+    if (parsed.ok) this.cache.setObjects(parsed.data)
+    return parsed
+  }
 
-      out.push(...page.data)
-      if (page.data.length < pageSize) break
-      offset += pageSize
-    }
+  async getObjectAttributes(slug: string): Promise<Result<AttributeDef[], WorkflowError>> {
+    const cached = this.cache.getAttributes<AttributeDef[]>(slug)
+    if (cached) return ok(cached)
 
-    return out
+    const raw = await this.request('GET', `/v2/objects/${encodeURIComponent(slug)}/attributes`)
+    if (!raw.ok) return raw
+    const parsed = parseListWith(AttributeDefSchema, raw.data)
+    if (parsed.ok) this.cache.setAttributes(slug, parsed.data)
+    return parsed
+  }
+
+  async listTasks(filter: TaskFilter = {}): Promise<Result<Task[], WorkflowError>> {
+    const queryHash = hashFilter(filter)
+    const cached = this.cache.getList<Task>('tasks', queryHash)
+    if (cached) return ok(cached)
+
+    const search = new URLSearchParams()
+    if (filter.assigneeWorkspaceMemberId) search.set('assignee', filter.assigneeWorkspaceMemberId)
+    if (filter.isCompleted !== undefined) search.set('is_completed', String(filter.isCompleted))
+    const qs = search.toString()
+    const path = qs ? `/v2/tasks?${qs}` : '/v2/tasks'
+
+    const raw = await this.request('GET', path)
+    if (!raw.ok) return raw
+    const parsed = parseListWith(TaskSchema, raw.data)
+    if (parsed.ok) this.cache.setList('tasks', queryHash, parsed.data)
+    return parsed
+  }
+
+  async queryRecords(slug: string, body: unknown): Promise<Result<RecordItem[], WorkflowError>> {
+    const queryHash = hashFilter({ slug, body })
+    const cached = this.cache.getList<RecordItem>(slug, queryHash)
+    if (cached) return ok(cached)
+
+    const raw = await this.request('POST', `/v2/objects/${encodeURIComponent(slug)}/records/query`, body)
+    if (!raw.ok) return raw
+    const parsed = parseListWith(RecordSchema, raw.data)
+    if (parsed.ok) this.cache.setList(slug, queryHash, parsed.data)
+    return parsed
   }
 }

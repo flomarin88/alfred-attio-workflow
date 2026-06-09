@@ -18,5 +18,17 @@
   "errors.unknown.title": "Something went wrong",
   "errors.unknown.subtitle": "Run attio:diag for details",
   "todo.empty.title": "No tasks due today for {workspace_member_name}",
-  "todo.empty.subtitle": ""
+  "todo.empty.subtitle": "",
+  "diag.disclaimer.title": "Unofficial workflow for Attio — share for support",
+  "diag.disclaimer.subtitle": "does not contain token or record content",
+  "diag.workspace.title": "Workspace: {workspace_name}",
+  "diag.workspace.subtitle": "slug: {workspace_slug}",
+  "diag.workspace.unset": "Workspace: —",
+  "diag.me.title": "Me",
+  "diag.me.subtitle": "id: {workspace_member_id}",
+  "diag.token.configured": "Token: configured",
+  "diag.token.missing": "Token: missing",
+  "diag.cache.title": "Cache age",
+  "diag.lastError.title": "Last error",
+  "diag.version.title": "Workflow version"
 }

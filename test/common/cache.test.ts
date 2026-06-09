@@ -319,3 +319,65 @@ describe('schema cache', () => {
     expect(cache.getAttributes('people')).toBeUndefined()
   })
 })
+
+describe('lastSetAt — diagnostic timestamps (Story 1.8)', () => {
+  let cache: Cache
+
+  beforeEach(() => {
+    cache = createCache(new MemoryBackend())
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-09T10:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('returns undefined when the category has never been touched', () => {
+    expect(cache.lastSetAt('tasks')).toBeUndefined()
+    expect(cache.lastSetAt('schemas')).toBeUndefined()
+  })
+
+  it('setRecord touches the matching slug category', () => {
+    cache.setRecord('people', 'rec_1', { id: 'rec_1' })
+    expect(cache.lastSetAt('people')).toBe(Date.now())
+    expect(cache.lastSetAt('tasks')).toBeUndefined()
+  })
+
+  it('setList touches the matching slug category', () => {
+    cache.setList('tasks', 'qh', [{ id: 'task_1' }])
+    expect(cache.lastSetAt('tasks')).toBe(Date.now())
+  })
+
+  it('setObjects touches the schemas category', () => {
+    cache.setObjects(['people'])
+    expect(cache.lastSetAt('schemas')).toBe(Date.now())
+  })
+
+  it('setAttributes touches the schemas category', () => {
+    cache.setAttributes('deals', [{ slug: 'stage' }])
+    expect(cache.lastSetAt('schemas')).toBe(Date.now())
+  })
+
+  it('ignores unknown slugs (no diag category surfaces them)', () => {
+    cache.setRecord('lists', 'l_1', { id: 'l_1' })
+    expect(cache.lastSetAt('tasks')).toBeUndefined()
+    expect(cache.lastSetAt('people')).toBeUndefined()
+  })
+
+  it('reflects the most recent set for a category', () => {
+    cache.setList('tasks', 'qh1', [{ id: 't1' }])
+    const first = cache.lastSetAt('tasks')!
+    vi.setSystemTime(new Date('2026-06-09T10:05:00.000Z'))
+    cache.setList('tasks', 'qh2', [{ id: 't2' }])
+    const second = cache.lastSetAt('tasks')!
+    expect(second).toBeGreaterThan(first)
+  })
+
+  it('clearAll wipes the last-set markers', () => {
+    cache.setList('tasks', 'qh', [{ id: 't1' }])
+    expect(cache.lastSetAt('tasks')).toBeDefined()
+    cache.clearAll()
+    expect(cache.lastSetAt('tasks')).toBeUndefined()
+  })
+})

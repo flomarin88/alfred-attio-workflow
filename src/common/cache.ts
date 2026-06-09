@@ -66,6 +66,28 @@ export function ttlForSlug(slug: string): number {
  */
 const KEY_SEP = ':'
 
+/**
+ * Categories surfaced by `attio:diag` row 4 (Story 1.8). The cache touches
+ * the matching key every time it stores a fresh value, so `lastSetAt(...)`
+ * gives the diagnostic snapshot a per-category age estimate without
+ * scanning the backend.
+ */
+export type DiagCategory = 'tasks' | 'people' | 'companies' | 'deals' | 'schemas'
+
+/** Long-ish TTL so the "last set" marker survives normal cache turnover. */
+const LAST_SET_TTL_MS = 365 * 24 * 60 * 60 * 1000
+
+const KNOWN_SLUG_CATEGORIES: ReadonlySet<DiagCategory> = new Set<DiagCategory>([
+  'tasks',
+  'people',
+  'companies',
+  'deals',
+])
+
+function categoryForSlug(slug: string): DiagCategory | undefined {
+  return KNOWN_SLUG_CATEGORIES.has(slug as DiagCategory) ? (slug as DiagCategory) : undefined
+}
+
 export class Cache {
   constructor(private readonly backend: CacheBackend) {}
 
@@ -85,6 +107,7 @@ export class Cache {
 
   setRecord<T>(slug: string, id: string, value: T): void {
     this.backend.setWithTTL(this.key('record', slug, id), value, { maxAge: ttlForSlug(slug) })
+    this.touchCategoryForSlug(slug)
   }
 
   getRecord<T>(slug: string, id: string): T | undefined {
@@ -104,6 +127,7 @@ export class Cache {
     for (const record of records) {
       this.addToListIndex(slug, record.id, listKey)
     }
+    this.touchCategoryForSlug(slug)
   }
 
   getList<T>(slug: string, queryHash: string): T[] | undefined {
@@ -116,6 +140,7 @@ export class Cache {
 
   setObjects<T>(objects: T): void {
     this.backend.setWithTTL(this.key('schema', 'objects'), objects, { maxAge: CACHE_TTL_SCHEMA_MS })
+    this.touchCategory('schemas')
   }
 
   getObjects<T>(): T | undefined {
@@ -124,6 +149,7 @@ export class Cache {
 
   setAttributes<T>(slug: string, attrs: T): void {
     this.backend.setWithTTL(this.key('schema', 'attributes', slug), attrs, { maxAge: CACHE_TTL_SCHEMA_MS })
+    this.touchCategory('schemas')
   }
 
   getAttributes<T>(slug: string): T | undefined {
@@ -169,6 +195,33 @@ export class Cache {
   // -------------------------------------------------------------------------
   // Internals.
   // -------------------------------------------------------------------------
+
+  // -------------------------------------------------------------------------
+  // Diagnostic timestamps (Story 1.8 — `attio:diag` row 4).
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns the epoch ms when this category was last refreshed, or
+   * `undefined` if it has never been touched. Consumed by
+   * `src/common/diag.ts` to compute human-readable cache ages.
+   */
+  lastSetAt(category: DiagCategory): number | undefined {
+    const value = this.backend.get(this.lastSetKey(category))
+    return typeof value === 'number' ? value : undefined
+  }
+
+  private touchCategory(category: DiagCategory): void {
+    this.backend.setWithTTL(this.lastSetKey(category), Date.now(), { maxAge: LAST_SET_TTL_MS })
+  }
+
+  private touchCategoryForSlug(slug: string): void {
+    const category = categoryForSlug(slug)
+    if (category) this.touchCategory(category)
+  }
+
+  private lastSetKey(category: DiagCategory): string {
+    return this.key('last-set', category)
+  }
 
   private addToListIndex(slug: string, recordId: string, listKey: string): void {
     const indexKey = this.key('list-index', slug, recordId)

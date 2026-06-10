@@ -68,6 +68,8 @@ export interface PersonRow {
   valid: boolean
   arg: string
   mods?: { cmd?: PersonMod }
+  /** Set by the keyword script after the Quick Look fiche is written. */
+  quicklookurl?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +119,36 @@ export function extractCompanyId(record: RecordItem): string | undefined {
 /** Returns true if any record lacks a LinkedIn URL — used to decide hint visibility. */
 export function hasMissingLinkedIn(records: RecordItem[]): boolean {
   return records.some((r) => !extractLinkedIn(r))
+}
+
+/**
+ * Primary email — `values.email_addresses[0]`. Attio stores email entries
+ * with the address at either `email_address` (current shape) or `value`
+ * (legacy); both are accepted.
+ */
+export function extractPrimaryEmail(record: RecordItem): string | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).email_addresses)
+  return readString(arr?.[0], 'email_address', 'value')
+}
+
+/**
+ * Primary phone — `values.phone_numbers[0]`. Stored at `phone_number`
+ * (current shape) or `value` (legacy); both are accepted.
+ */
+export function extractPrimaryPhone(record: RecordItem): string | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).phone_numbers)
+  return readString(arr?.[0], 'phone_number', 'value')
+}
+
+/**
+ * Last-updated timestamp. Prefers the envelope-level `updated_at`
+ * (Story 1.7 schema), falls back to `values.last_setting_action_at[0].value`
+ * which is what `people` queries actually surface today.
+ */
+export function extractLastUpdated(record: RecordItem): string | undefined {
+  if (record.updatedAt) return record.updatedAt
+  const arr = asArray((record.values as Record<string, unknown>).last_setting_action_at)
+  return readString(arr?.[0], 'value')
 }
 
 // ---------------------------------------------------------------------------

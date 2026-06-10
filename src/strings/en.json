@@ -54,5 +54,12 @@
   "task.status.open": "Open",
   "task.status.completed": "Completed",
   "task.mod.fallback.subtitle": "Open in Attio (tasks have no external link)",
-  "task.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for tasks (last reminder)"
+  "task.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for tasks (last reminder)",
+  "fiche.kind.person": "Person",
+  "fiche.label.jobTitle": "Job title",
+  "fiche.label.email": "Email",
+  "fiche.label.phone": "Phone",
+  "fiche.label.company": "Company",
+  "fiche.label.linkedin": "LinkedIn",
+  "fiche.label.lastUpdated": "Last updated"
 }

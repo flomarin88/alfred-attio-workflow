@@ -9,17 +9,26 @@
  * the API client or encoders, and MAY NOT use `fetch`. Tests inject the
  * `fs` deps so we never touch the real filesystem in unit runs.
  */
-import { readdir, unlink } from 'node:fs/promises'
+import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises'
 
-/** Minimal filesystem surface — readdir + unlink. DI'd for testing. */
+/**
+ * Minimal filesystem surface used by Quick Look helpers. DI'd for
+ * testing. The renderer / writer pair lives in this module because
+ * `eslint.config.mjs` grants `quicklook.ts` the sole permission to use
+ * `node:fs/promises` outside `cache.ts`.
+ */
 export interface QuicklookFs {
   readdir(dir: string): Promise<string[]>
   unlink(path: string): Promise<void>
+  mkdir(dir: string, opts: { recursive: true }): Promise<unknown>
+  writeFile(path: string, data: string): Promise<void>
 }
 
 const DEFAULT_FS: QuicklookFs = {
   readdir: (dir) => readdir(dir),
   unlink: (path) => unlink(path),
+  mkdir: (dir, opts) => mkdir(dir, opts),
+  writeFile: (path, data) => writeFile(path, data, 'utf8'),
 }
 
 /**
@@ -101,6 +110,19 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): Html 
     out += renderValue(values[i]) + strings[i + 1]
   }
   return new Html(out)
+}
+
+/**
+ * Wraps an already-trusted HTML string as an `Html` fragment so it
+ * passes through `html\`\`` interpolation unescaped. Use ONLY for HTML
+ * the workflow itself produced — never user-supplied content. The
+ * Story 3.1 helpers (`getStyles`, `getFontFace`) return plain strings
+ * to keep their own unit-test API ergonomic; per-object fiche renderers
+ * (Stories 3.2–3.5) re-wrap their output via `raw()` before
+ * interpolation.
+ */
+export function raw(value: string): Html {
+  return new Html(value)
 }
 
 // ---------------------------------------------------------------------------
@@ -245,4 +267,35 @@ export function getFontFace(bundleDir: string): string {
   font-display: swap;
 }
 </style>`
+}
+
+// ---------------------------------------------------------------------------
+// Story 3.2 — fiche writer (HTML → cache file)
+// ---------------------------------------------------------------------------
+
+/**
+ * Writes a rendered HTML fiche to `${cacheDir}/quicklook/${filename}`
+ * and returns the absolute path written. Creates the `quicklook/`
+ * subdirectory if needed. Returns `undefined` when any I/O step fails —
+ * callers degrade silently (the row omits `quicklookurl` and ⇧ falls
+ * back to no preview).
+ *
+ * `cacheDir` is typically `alfredClient.alfredInfo.cache()`. `filename`
+ * must include the extension (e.g. `person-rec_abc.html`).
+ */
+export async function writeQuicklookHtml(
+  cacheDir: string,
+  filename: string,
+  html: string,
+  fs: QuicklookFs = DEFAULT_FS,
+): Promise<string | undefined> {
+  const dir = `${cacheDir.replace(/\/$/, '')}/quicklook`
+  const path = `${dir}/${filename}`
+  try {
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(path, html)
+    return path
+  } catch {
+    return undefined
+  }
 }

@@ -152,6 +152,7 @@ export const RecordSchema = z
     web_url: z.string().nullish(),
     values: z.record(z.string(), z.unknown()).optional(),
     created_at: z.string().optional(),
+    updated_at: z.string().optional(),
   })
   .passthrough()
   .transform((raw) => ({
@@ -159,6 +160,7 @@ export const RecordSchema = z
     webUrl: raw.web_url ?? '',
     values: raw.values ?? {},
     createdAt: raw.created_at ?? '',
+    updatedAt: raw.updated_at ?? '',
   }))
 
 export type RecordItem = z.infer<typeof RecordSchema>

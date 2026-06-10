@@ -14,7 +14,14 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { RecordItem } from '../../src/common/attio/schemas'
-import { type PersonInputs, buildPersonRows, hasMissingLinkedIn } from '../../src/common/person'
+import {
+  type PersonInputs,
+  buildPersonRows,
+  extractLastUpdated,
+  extractPrimaryEmail,
+  extractPrimaryPhone,
+  hasMissingLinkedIn,
+} from '../../src/common/person'
 import { type Strings, createStrings } from '../../src/common/strings'
 
 function makeStrings(): Strings {
@@ -272,5 +279,59 @@ describe('hasMissingLinkedIn', () => {
 
   it('returns false on an empty list', () => {
     expect(hasMissingLinkedIn([])).toBe(false)
+  })
+})
+
+describe('extractPrimaryEmail (Story 3.2)', () => {
+  it('reads email_addresses[0].email_address', () => {
+    const record = makeRecord({ values: { email_addresses: [{ email_address: 'jane@acme.com' }] } })
+    expect(extractPrimaryEmail(record)).toBe('jane@acme.com')
+  })
+
+  it('falls back to email_addresses[0].value (legacy shape)', () => {
+    const record = makeRecord({ values: { email_addresses: [{ value: 'jane@acme.com' }] } })
+    expect(extractPrimaryEmail(record)).toBe('jane@acme.com')
+  })
+
+  it('returns undefined when no email_addresses entry', () => {
+    expect(extractPrimaryEmail(makeRecord({ values: {} }))).toBeUndefined()
+  })
+
+  it('returns undefined when email_addresses is empty', () => {
+    expect(extractPrimaryEmail(makeRecord({ values: { email_addresses: [] } }))).toBeUndefined()
+  })
+})
+
+describe('extractPrimaryPhone (Story 3.2)', () => {
+  it('reads phone_numbers[0].phone_number', () => {
+    const record = makeRecord({ values: { phone_numbers: [{ phone_number: '+33 6 12 34 56 78' }] } })
+    expect(extractPrimaryPhone(record)).toBe('+33 6 12 34 56 78')
+  })
+
+  it('falls back to phone_numbers[0].value (legacy shape)', () => {
+    const record = makeRecord({ values: { phone_numbers: [{ value: '+33 6 12 34 56 78' }] } })
+    expect(extractPrimaryPhone(record)).toBe('+33 6 12 34 56 78')
+  })
+
+  it('returns undefined when no phone_numbers entry', () => {
+    expect(extractPrimaryPhone(makeRecord({ values: {} }))).toBeUndefined()
+  })
+})
+
+describe('extractLastUpdated (Story 3.2)', () => {
+  it('prefers the envelope updatedAt', () => {
+    const record = makeRecord({ updatedAt: '2026-06-09T08:00:00Z' } as Partial<RecordItem>)
+    expect(extractLastUpdated(record)).toBe('2026-06-09T08:00:00Z')
+  })
+
+  it('falls back to values.last_setting_action_at[0].value when envelope is empty', () => {
+    const record = makeRecord({
+      values: { last_setting_action_at: [{ value: '2026-06-08T10:30:00Z' }] },
+    })
+    expect(extractLastUpdated(record)).toBe('2026-06-08T10:30:00Z')
+  })
+
+  it('returns undefined when neither is present', () => {
+    expect(extractLastUpdated(makeRecord({ values: {} }))).toBeUndefined()
   })
 })

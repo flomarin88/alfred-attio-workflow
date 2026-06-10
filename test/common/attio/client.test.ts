@@ -577,6 +577,7 @@ describe('AttioClient.queryRecords', () => {
           webUrl: 'https://app.attio.com/x/people/rec_jane',
           values: { name: 'Jane Doe' },
           createdAt: '2026-05-01T10:00:00.000Z',
+          updatedAt: '',
         },
       ],
     })

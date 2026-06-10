@@ -10,7 +10,9 @@ import {
   getFontFace,
   getStyles,
   html,
+  raw,
   scrubHtmlCache,
+  writeQuicklookHtml,
 } from '../../src/common/quicklook'
 
 function makeFs(entries: string[], failOn: Set<string> = new Set()): { fs: QuicklookFs; unlinked: string[] } {
@@ -21,8 +23,34 @@ function makeFs(entries: string[], failOn: Set<string> = new Set()): { fs: Quick
       if (failOn.has(path)) throw new Error('EPERM')
       unlinked.push(path)
     }),
+    mkdir: vi.fn().mockResolvedValue(undefined),
+    writeFile: vi.fn().mockResolvedValue(undefined),
   }
   return { fs, unlinked }
+}
+
+interface WriterFs {
+  fs: QuicklookFs
+  mkdirCalls: Array<{ dir: string; opts: unknown }>
+  writeCalls: Array<{ path: string; data: string }>
+}
+
+function makeWriterFs(opts: { mkdirFails?: boolean; writeFails?: boolean } = {}): WriterFs {
+  const mkdirCalls: WriterFs['mkdirCalls'] = []
+  const writeCalls: WriterFs['writeCalls'] = []
+  const fs: QuicklookFs = {
+    readdir: vi.fn().mockResolvedValue([]),
+    unlink: vi.fn().mockResolvedValue(undefined),
+    mkdir: vi.fn().mockImplementation(async (dir: string, options: unknown) => {
+      mkdirCalls.push({ dir, opts: options })
+      if (opts.mkdirFails) throw new Error('EPERM')
+    }),
+    writeFile: vi.fn().mockImplementation(async (path: string, data: string) => {
+      writeCalls.push({ path, data })
+      if (opts.writeFails) throw new Error('ENOSPC')
+    }),
+  }
+  return { fs, mkdirCalls, writeCalls }
 }
 
 describe('scrubHtmlCache', () => {
@@ -49,6 +77,8 @@ describe('scrubHtmlCache', () => {
     const fs: QuicklookFs = {
       readdir: vi.fn().mockRejectedValue(new Error('ENOENT')),
       unlink: vi.fn(),
+      mkdir: vi.fn(),
+      writeFile: vi.fn(),
     }
     expect(await scrubHtmlCache('/missing', fs)).toBe(0)
     expect(fs.unlink).not.toHaveBeenCalled()
@@ -257,5 +287,49 @@ describe('getFontFace', () => {
     const css = getFontFace('/x')
     expect(css.startsWith('<style>')).toBe(true)
     expect(css.endsWith('</style>')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Story 3.2 — raw() pass-through + writeQuicklookHtml
+// ---------------------------------------------------------------------------
+
+describe('raw', () => {
+  it('returns an Html fragment that passes through html`` unescaped', () => {
+    const trusted = raw('<style>body{color:red}</style>')
+    // prettier-ignore
+    const out = html`<head>${trusted}</head>`
+    expect(String(out)).toBe('<head><style>body{color:red}</style></head>')
+  })
+
+  it('does NOT escape the raw input (caller asserts trust)', () => {
+    expect(String(raw('<b>&</b>'))).toBe('<b>&</b>')
+  })
+})
+
+describe('writeQuicklookHtml', () => {
+  it('mkdir -p the quicklook/ subdir then writes the file with UTF-8 content', async () => {
+    const { fs, mkdirCalls, writeCalls } = makeWriterFs()
+    const path = await writeQuicklookHtml('/tmp/cache', 'person-rec_x.html', '<html></html>', fs)
+    expect(path).toBe('/tmp/cache/quicklook/person-rec_x.html')
+    expect(mkdirCalls).toEqual([{ dir: '/tmp/cache/quicklook', opts: { recursive: true } }])
+    expect(writeCalls).toEqual([{ path: '/tmp/cache/quicklook/person-rec_x.html', data: '<html></html>' }])
+  })
+
+  it('strips trailing slash from cacheDir before building the path', async () => {
+    const { fs, writeCalls } = makeWriterFs()
+    const path = await writeQuicklookHtml('/tmp/cache/', 'a.html', 'x', fs)
+    expect(path).toBe('/tmp/cache/quicklook/a.html')
+    expect(writeCalls[0].path).toBe('/tmp/cache/quicklook/a.html')
+  })
+
+  it('returns undefined when mkdir fails (silent degrade)', async () => {
+    const { fs } = makeWriterFs({ mkdirFails: true })
+    expect(await writeQuicklookHtml('/tmp/cache', 'a.html', 'x', fs)).toBeUndefined()
+  })
+
+  it('returns undefined when writeFile fails (silent degrade)', async () => {
+    const { fs } = makeWriterFs({ writeFails: true })
+    expect(await writeQuicklookHtml('/tmp/cache', 'a.html', 'x', fs)).toBeUndefined()
   })
 })

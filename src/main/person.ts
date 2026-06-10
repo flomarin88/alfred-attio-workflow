@@ -16,6 +16,7 @@ import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
 import { AttioClient } from '@common/attio/client'
 import type { ConfigStore, Identity } from '@common/attio/identity'
+import type { RecordItem } from '@common/attio/schemas'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
@@ -23,7 +24,20 @@ import { clearLifecycleMissingSlug, persistWorkflowError, recordLifecycleMissing
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { lifecycleSlugExists } from '@common/lifecycle'
 import { createNotify } from '@common/notify'
-import { type PersonRow, buildPersonRows, extractCompanyId, hasMissingLinkedIn } from '@common/person'
+import {
+  type PersonRow,
+  buildPersonRows,
+  extractCompanyId,
+  extractJobTitle,
+  extractLastUpdated,
+  extractLinkedIn,
+  extractPersonName,
+  extractPrimaryEmail,
+  extractPrimaryPhone,
+  hasMissingLinkedIn,
+} from '@common/person'
+import { renderPersonFiche } from '@common/person-fiche'
+import { writeQuicklookHtml } from '@common/quicklook'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
 import { Variables } from '@common/variables.enum'
@@ -42,14 +56,18 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const query = (alfredClient.input ?? '').trim()
 
     if (!pat) {
-      emit(alfredClient, strings, {
-        identity: undefined,
-        records: [],
-        companyNames: new Map(),
-        query,
-        patPresent: false,
-        showLinkedInHint: false,
-      })
+      const rows = buildPersonRows(
+        {
+          identity: undefined,
+          records: [],
+          companyNames: new Map(),
+          query,
+          patPresent: false,
+          showLinkedInHint: false,
+        },
+        strings,
+      )
+      alfredClient.output(toScriptFilter(rows))
       return
     }
 
@@ -85,15 +103,26 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const hintDismissed = config.get(HINT_FLAG) === true
     const showLinkedInHint = !hintDismissed && hasMissingLinkedIn(result.data)
 
-    emit(alfredClient, strings, {
-      identity,
-      records: result.data,
-      companyNames,
-      query,
-      patPresent: true,
-      showLinkedInHint,
-      lifecycleSlug,
-    })
+    const rows = buildPersonRows(
+      {
+        identity,
+        records: result.data,
+        companyNames,
+        query,
+        patPresent: true,
+        showLinkedInHint,
+        lifecycleSlug,
+      },
+      strings,
+    )
+
+    // FR-018 / FR-034 — write a Quick Look fiche for each surfaced
+    // person row and attach the `file://` path. Best-effort: when the
+    // write fails the row simply has no `quicklookurl` and ⇧ shows
+    // nothing.
+    await attachPersonFiches(rows, result.data, companyNames, alfredClient, strings)
+
+    alfredClient.output(toScriptFilter(rows))
 
     if (showLinkedInHint) {
       // Persist immediately — the first render IS the hint. Subsequent
@@ -200,13 +229,51 @@ async function resolveLifecycleSlug(
 }
 
 // ---------------------------------------------------------------------------
-// Output helpers
+// Story 3.2 — fiche generation
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildPersonRows>[0]): void {
-  const rows = buildPersonRows(inputs, strings)
-  alfredClient.output(toScriptFilter(rows))
+async function attachPersonFiches(
+  rows: PersonRow[],
+  records: RecordItem[],
+  companyNames: Map<string, string>,
+  alfredClient: FastAlfred,
+  strings: Strings,
+): Promise<void> {
+  const cacheDir = alfredClient.alfredInfo.cache()
+  if (!cacheDir) return
+  const bundleDir = process.cwd()
+  const recordsById = new Map<string, RecordItem>()
+  for (const record of records) recordsById.set(record.id, record)
+
+  await Promise.all(
+    rows.map(async (row) => {
+      if (!row.uid.startsWith('person-')) return
+      const id = row.uid.slice('person-'.length)
+      const record = recordsById.get(id)
+      if (!record) return
+      const companyId = extractCompanyId(record)
+      const html = renderPersonFiche(
+        {
+          id,
+          name: extractPersonName(record),
+          jobTitle: extractJobTitle(record),
+          primaryEmail: extractPrimaryEmail(record),
+          primaryPhone: extractPrimaryPhone(record),
+          linkedCompanyName: companyId ? companyNames.get(companyId) : undefined,
+          linkedinUrl: extractLinkedIn(record),
+          lastUpdatedAt: extractLastUpdated(record),
+        },
+        { bundleDir, strings },
+      )
+      const written = await writeQuicklookHtml(cacheDir, `person-${id}.html`, html)
+      if (written) row.quicklookurl = `file://${written}`
+    }),
+  )
 }
+
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
 function handleError(
   alfredClient: FastAlfred,
@@ -243,6 +310,7 @@ function toScriptFilter(rows: PersonRow[]): AlfredScriptFilter {
       icon: spec.icon,
       valid: spec.valid,
       arg: spec.arg,
+      ...(spec.quicklookurl !== undefined ? { quicklookurl: spec.quicklookurl } : {}),
       ...(spec.mods !== undefined ? { mods: spec.mods } : {}),
     }),
   ) as unknown as AlfredListItem[]

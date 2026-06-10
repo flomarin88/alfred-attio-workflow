@@ -12,14 +12,26 @@ import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
 import { AttioClient } from '@common/attio/client'
 import type { ConfigStore, Identity } from '@common/attio/identity'
+import type { RecordItem } from '@common/attio/schemas'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
-import { type CompanyRow, buildCompanyRows } from '@common/company'
+import {
+  type CompanyRow,
+  buildCompanyRows,
+  extractCompanyName,
+  extractDomain,
+  extractIndustry,
+  extractLastUpdated,
+  extractLocation,
+  extractTeamCount,
+} from '@common/company'
+import { renderCompanyFiche } from '@common/company-fiche'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
 import { clearLifecycleMissingSlug, persistWorkflowError, recordLifecycleMissingSlug } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { lifecycleSlugExists } from '@common/lifecycle'
 import { createNotify } from '@common/notify'
+import { writeQuicklookHtml } from '@common/quicklook'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
 import { Variables } from '@common/variables.enum'
@@ -36,7 +48,8 @@ import { Variables } from '@common/variables.enum'
     const query = (alfredClient.input ?? '').trim()
 
     if (!pat) {
-      emit(alfredClient, strings, { identity: undefined, records: [], query, patPresent: false })
+      const rows = buildCompanyRows({ identity: undefined, records: [], query, patPresent: false }, strings)
+      alfredClient.output(toScriptFilter(rows))
       return
     }
 
@@ -68,13 +81,20 @@ import { Variables } from '@common/variables.enum'
 
     const lifecycleSlug = await resolveLifecycleSlug(client, config, alfredClient)
 
-    emit(alfredClient, strings, {
-      identity,
-      records: result.data,
-      query,
-      patPresent: true,
-      lifecycleSlug,
-    })
+    const rows = buildCompanyRows(
+      {
+        identity,
+        records: result.data,
+        query,
+        patPresent: true,
+        lifecycleSlug,
+      },
+      strings,
+    )
+
+    await attachCompanyFiches(rows, result.data, alfredClient, strings)
+
+    alfredClient.output(toScriptFilter(rows))
   } catch (error) {
     alfredClient.error(error as Error)
   }
@@ -125,13 +145,49 @@ async function resolveLifecycleSlug(
 }
 
 // ---------------------------------------------------------------------------
-// Output helpers
+// Story 3.3 — fiche generation
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildCompanyRows>[0]): void {
-  const rows = buildCompanyRows(inputs, strings)
-  alfredClient.output(toScriptFilter(rows))
+async function attachCompanyFiches(
+  rows: CompanyRow[],
+  records: RecordItem[],
+  alfredClient: FastAlfred,
+  strings: Strings,
+): Promise<void> {
+  const cacheDir = alfredClient.alfredInfo.cache()
+  if (!cacheDir) return
+  const bundleDir = process.cwd()
+  const recordsById = new Map<string, RecordItem>()
+  for (const record of records) recordsById.set(record.id, record)
+
+  await Promise.all(
+    rows.map(async (row) => {
+      if (!row.uid.startsWith('company-')) return
+      const id = row.uid.slice('company-'.length)
+      const record = recordsById.get(id)
+      if (!record) return
+      const location = extractLocation(record)
+      const html = renderCompanyFiche(
+        {
+          id,
+          name: extractCompanyName(record),
+          domain: extractDomain(record),
+          industry: extractIndustry(record),
+          location,
+          teamCount: extractTeamCount(record),
+          lastUpdatedAt: extractLastUpdated(record),
+        },
+        { bundleDir, strings },
+      )
+      const written = await writeQuicklookHtml(cacheDir, `company-${id}.html`, html)
+      if (written) row.quicklookurl = `file://${written}`
+    }),
+  )
 }
+
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
 function handleError(
   alfredClient: FastAlfred,
@@ -168,6 +224,7 @@ function toScriptFilter(rows: CompanyRow[]): AlfredScriptFilter {
       icon: spec.icon,
       valid: spec.valid,
       arg: spec.arg,
+      ...(spec.quicklookurl !== undefined ? { quicklookurl: spec.quicklookurl } : {}),
       ...(spec.mods !== undefined ? { mods: spec.mods } : {}),
     }),
   ) as unknown as AlfredListItem[]

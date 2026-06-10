@@ -51,6 +51,8 @@ export interface CompanyRow {
   valid: boolean
   arg: string
   mods?: { cmd?: CompanyMod }
+  /** Set by the keyword script after the Quick Look fiche is written. */
+  quicklookurl?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +119,50 @@ export function extractWebsiteUrl(record: RecordItem): string | undefined {
 
 function ensureScheme(input: string): string {
   return /^https?:\/\//i.test(input) ? input : `https://${input}`
+}
+
+/**
+ * Industry — `values.categories[0]` (select-style entry with
+ * `option.title` / `value`) or the legacy `values.industry[0].value`.
+ * Returns `undefined` when neither is present.
+ */
+export function extractIndustry(record: RecordItem): string | undefined {
+  const categoriesArr = asArray((record.values as Record<string, unknown>).categories)
+  const firstCat = categoriesArr?.[0]
+  if (firstCat) {
+    const option = firstCat.option
+    if (typeof option === 'object' && option !== null) {
+      const title = readString(option as Record<string, unknown>, 'title', 'name')
+      if (title) return title
+    }
+    const direct = readString(firstCat, 'value', 'title', 'name')
+    if (direct) return direct
+  }
+  const industryArr = asArray((record.values as Record<string, unknown>).industry)
+  return readString(industryArr?.[0], 'value', 'title', 'name')
+}
+
+/**
+ * Linked-people count — `values.team` is Attio's canonical "people who
+ * work at this company" multi-reference attribute. Returns `undefined`
+ * when the attribute is absent so the fiche row can be silently omitted.
+ * Empty `team` arrays return `0`, which the caller may choose to show.
+ */
+export function extractTeamCount(record: RecordItem): number | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).team)
+  if (arr === undefined) return undefined
+  return arr.length
+}
+
+/**
+ * Last-updated timestamp. Prefers the envelope-level `updatedAt`
+ * (Story 1.7 schema), falls back to `values.last_setting_action_at[0].value`.
+ * Mirrors `person.ts::extractLastUpdated`.
+ */
+export function extractLastUpdated(record: RecordItem): string | undefined {
+  if (record.updatedAt) return record.updatedAt
+  const arr = asArray((record.values as Record<string, unknown>).last_setting_action_at)
+  return readString(arr?.[0], 'value')
 }
 
 // ---------------------------------------------------------------------------

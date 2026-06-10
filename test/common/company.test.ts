@@ -15,7 +15,10 @@ import {
   type CompanyInputs,
   buildCompanyRows,
   extractDomain,
+  extractIndustry,
+  extractLastUpdated,
   extractLocation,
+  extractTeamCount,
   extractWebsiteUrl,
 } from '../../src/common/company'
 import { type Strings, createStrings } from '../../src/common/strings'
@@ -220,5 +223,58 @@ describe('buildCompanyRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', 
     })
     const rows = buildCompanyRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
     expect(rows[0].subtitle).toBe('Lead')
+  })
+})
+
+describe('extractIndustry (Story 3.3)', () => {
+  it('reads categories[0].option.title (select-type categories)', () => {
+    const record = makeRecord({ categories: [{ option: { title: 'Software' } }] })
+    expect(extractIndustry(record)).toBe('Software')
+  })
+
+  it('falls back to categories[0].value', () => {
+    const record = makeRecord({ categories: [{ value: 'Software' }] })
+    expect(extractIndustry(record)).toBe('Software')
+  })
+
+  it('falls back to industry[0].value when no categories', () => {
+    const record = makeRecord({ industry: [{ value: 'Software' }] })
+    expect(extractIndustry(record)).toBe('Software')
+  })
+
+  it('returns undefined when neither categories nor industry is present', () => {
+    expect(extractIndustry(makeRecord({}))).toBeUndefined()
+  })
+})
+
+describe('extractTeamCount (Story 3.3)', () => {
+  it('returns the length of the team array', () => {
+    const record = makeRecord({ team: [{ target_record_id: 'p1' }, { target_record_id: 'p2' }] })
+    expect(extractTeamCount(record)).toBe(2)
+  })
+
+  it('returns 0 for an empty team array (empty-team signal preserved)', () => {
+    const record = makeRecord({ team: [] })
+    expect(extractTeamCount(record)).toBe(0)
+  })
+
+  it('returns undefined when the team attribute is absent', () => {
+    expect(extractTeamCount(makeRecord({}))).toBeUndefined()
+  })
+})
+
+describe('extractLastUpdated (Story 3.3)', () => {
+  it('prefers the envelope updatedAt', () => {
+    const record = makeRecord({}, { updatedAt: '2026-06-09T08:00:00Z' })
+    expect(extractLastUpdated(record)).toBe('2026-06-09T08:00:00Z')
+  })
+
+  it('falls back to values.last_setting_action_at[0].value', () => {
+    const record = makeRecord({ last_setting_action_at: [{ value: '2026-06-08T10:30:00Z' }] })
+    expect(extractLastUpdated(record)).toBe('2026-06-08T10:30:00Z')
+  })
+
+  it('returns undefined when neither is present', () => {
+    expect(extractLastUpdated(makeRecord({}))).toBeUndefined()
   })
 })

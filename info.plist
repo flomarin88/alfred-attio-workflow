@@ -189,27 +189,6 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>browser</key>
-				<string></string>
-				<key>skipqueryencode</key>
-				<false/>
-				<key>skipvarencode</key>
-				<false/>
-				<key>spaces</key>
-				<string></string>
-				<key>url</key>
-				<string></string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.openurl</string>
-			<key>uid</key>
-			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -253,104 +232,6 @@
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>B6F11354-AE5F-45CA-85AD-E353AF2150BD</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>2</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>attio:diag</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Collecting diagnostic snapshot…</string>
-				<key>script</key>
-				<string>./esbuild/assets/run-node.sh esbuild/diag.js "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Diagnostic snapshot — copy-safe for support</string>
-				<key>title</key>
-				<string>Diagnostics</string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>BE832727-477B-43EA-9C7A-E0CE6F02BCFB</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>2</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>attio:refresh</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Clearing caches…</string>
-				<key>script</key>
-				<string>./esbuild/assets/run-node.sh esbuild/refresh.js "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Wipe caches and re-fetch identity + schemas</string>
-				<key>title</key>
-				<string>Refresh</string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>A21D94F7-2505-4BEC-B46D-75C90F476811</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -431,6 +312,27 @@
 			<string>E686B693-BF28-4E96-95F7-7912EBF12455</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string></string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -530,6 +432,104 @@
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>attio:refresh</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Clearing caches…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/refresh.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Wipe caches and re-fetch identity + schemas</string>
+				<key>title</key>
+				<string>Refresh</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A21D94F7-2505-4BEC-B46D-75C90F476811</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>attio:diag</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Collecting diagnostic snapshot…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/diag.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Diagnostic snapshot — copy-safe for support</string>
+				<key>title</key>
+				<string>Diagnostics</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>BE832727-477B-43EA-9C7A-E0CE6F02BCFB</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>TODO - fill README
@@ -550,56 +550,56 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<key>xpos</key>
 			<real>600</real>
 			<key>ypos</key>
-			<real>650</real>
+			<real>800</real>
 		</dict>
 		<key>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</key>
 		<dict>
 			<key>xpos</key>
-			<real>815</real>
+			<real>1105</real>
 			<key>ypos</key>
-			<real>40</real>
+			<real>515</real>
 		</dict>
 		<key>A21D94F7-2505-4BEC-B46D-75C90F476811</key>
 		<dict>
 			<key>xpos</key>
-			<real>600</real>
+			<real>595</real>
 			<key>ypos</key>
-			<real>380</real>
+			<real>960</real>
 		</dict>
 		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
 		<dict>
 			<key>xpos</key>
 			<real>595</real>
 			<key>ypos</key>
-			<real>20</real>
+			<real>215</real>
 		</dict>
 		<key>B6F11354-AE5F-45CA-85AD-E353AF2150BD</key>
 		<dict>
 			<key>xpos</key>
-			<real>595</real>
+			<real>590</real>
 			<key>ypos</key>
-			<real>150</real>
+			<real>350</real>
 		</dict>
 		<key>BE832727-477B-43EA-9C7A-E0CE6F02BCFB</key>
 		<dict>
 			<key>xpos</key>
-			<real>595</real>
+			<real>600</real>
 			<key>ypos</key>
-			<real>265</real>
+			<real>1120</real>
 		</dict>
 		<key>D996D95C-AE52-48C5-8AA2-573817584A90</key>
 		<dict>
 			<key>xpos</key>
 			<real>600</real>
 			<key>ypos</key>
-			<real>570</real>
+			<real>630</real>
 		</dict>
 		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
 		<dict>
 			<key>xpos</key>
 			<real>600</real>
 			<key>ypos</key>
-			<real>490</real>
+			<real>510</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

@@ -56,10 +56,15 @@
   "task.mod.fallback.subtitle": "Open in Attio (tasks have no external link)",
   "task.mod.fallback.hint.subtitle": "Open in Attio — ⌘⏎ has no external link for tasks (last reminder)",
   "fiche.kind.person": "Person",
+  "fiche.kind.company": "Company",
   "fiche.label.jobTitle": "Job title",
   "fiche.label.email": "Email",
   "fiche.label.phone": "Phone",
   "fiche.label.company": "Company",
   "fiche.label.linkedin": "LinkedIn",
-  "fiche.label.lastUpdated": "Last updated"
+  "fiche.label.lastUpdated": "Last updated",
+  "fiche.label.domain": "Domain",
+  "fiche.label.industry": "Industry",
+  "fiche.label.location": "Location",
+  "fiche.label.team": "Team size"
 }

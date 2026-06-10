@@ -198,6 +198,66 @@ describe('buildPersonRows — ⌘⏎ LinkedIn mod (FR-015)', () => {
   })
 })
 
+describe('buildPersonRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', () => {
+  function recordWithLifecycle(opts: { name: string; jobTitle?: string; lifecycle?: unknown }): RecordItem {
+    const values: Record<string, unknown> = {
+      name: [{ full_name: opts.name }],
+    }
+    if (opts.jobTitle) values.job_title = [{ value: opts.jobTitle }]
+    if (opts.lifecycle !== undefined) values.lifecycle_stage = opts.lifecycle
+    return makeRecord({
+      id: 'rec_x',
+      webUrl: 'https://app.attio.com/x/people/rec_x',
+      values,
+    })
+  }
+
+  it('appends lifecycle value to subtitle when slug is set and value exists (status type)', () => {
+    const record = recordWithLifecycle({
+      name: 'Jane',
+      jobTitle: 'CTO',
+      lifecycle: [{ status: { title: 'Customer' } }],
+    })
+    const rows = buildPersonRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('CTO · Customer')
+  })
+
+  it('appends after company too — full FR-013 + lifecycle layout', () => {
+    const record = makeRecord({
+      id: 'rec_x',
+      webUrl: 'https://app.attio.com/x/people/rec_x',
+      values: {
+        name: [{ full_name: 'Jane' }],
+        job_title: [{ value: 'CTO' }],
+        company: [{ target_record_id: 'c1' }],
+        lifecycle_stage: [{ status: { title: 'Customer' } }],
+      },
+    })
+    const names = new Map<string, string>([['c1', 'Acme Inc.']])
+    const rows = buildPersonRows(
+      defaults({ records: [record], companyNames: names, lifecycleSlug: 'lifecycle_stage' }),
+      makeStrings(),
+    )
+    expect(rows[0].subtitle).toBe('CTO · Acme Inc. · Customer')
+  })
+
+  it('uses FR-013 default (no trailing segment) when lifecycleSlug is undefined (empty config)', () => {
+    const record = recordWithLifecycle({
+      name: 'Jane',
+      jobTitle: 'CTO',
+      lifecycle: [{ status: { title: 'Customer' } }],
+    })
+    const rows = buildPersonRows(defaults({ records: [record] }), makeStrings())
+    expect(rows[0].subtitle).toBe('CTO')
+  })
+
+  it('uses FR-013 default when slug is set but record has no value for it (missing-on-record)', () => {
+    const record = recordWithLifecycle({ name: 'Jane', jobTitle: 'CTO' })
+    const rows = buildPersonRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('CTO')
+  })
+})
+
 describe('hasMissingLinkedIn', () => {
   it('returns true when at least one record lacks a LinkedIn URL', () => {
     const a = makeRecord({ values: personValues({ name: 'A', linkedinUrl: 'https://l/a' }) })

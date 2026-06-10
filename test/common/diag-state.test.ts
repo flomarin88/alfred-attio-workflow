@@ -10,7 +10,15 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { ConfigStore } from '../../src/common/attio/identity'
-import { clearLastError, readLastError, recordLastError, redactRecordIds } from '../../src/common/diag-state'
+import {
+  clearLastError,
+  clearLifecycleMissingSlug,
+  readLastError,
+  readLifecycleWarnings,
+  recordLastError,
+  recordLifecycleMissingSlug,
+  redactRecordIds,
+} from '../../src/common/diag-state'
 
 class MemoryConfig implements ConfigStore {
   readonly store = new Map<string, unknown>()
@@ -107,5 +115,83 @@ describe('recordLastError + readLastError', () => {
     expect(readLastError(config)).toBeDefined()
     clearLastError(config)
     expect(readLastError(config)).toBeUndefined()
+  })
+})
+
+describe('lifecycle slug warnings — Story 2.5', () => {
+  it('returns undefined when no warnings have been written', () => {
+    expect(readLifecycleWarnings(new MemoryConfig())).toBeUndefined()
+  })
+
+  it('persists a missing-slug warning per object', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'lifecycle_stage')
+    expect(readLifecycleWarnings(config)).toEqual({ person: 'lifecycle_stage' })
+  })
+
+  it('accumulates warnings across multiple objects', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'lifecycle_stage')
+    recordLifecycleMissingSlug(config, 'company', 'tier')
+    recordLifecycleMissingSlug(config, 'deal', 'stage')
+    expect(readLifecycleWarnings(config)).toEqual({
+      person: 'lifecycle_stage',
+      company: 'tier',
+      deal: 'stage',
+    })
+  })
+
+  it('overwrites the same object with a new slug', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'old_slug')
+    recordLifecycleMissingSlug(config, 'person', 'new_slug')
+    expect(readLifecycleWarnings(config)).toEqual({ person: 'new_slug' })
+  })
+
+  it('is idempotent — writing the same slug twice leaves a single entry', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'lifecycle_stage')
+    recordLifecycleMissingSlug(config, 'person', 'lifecycle_stage')
+    expect(readLifecycleWarnings(config)).toEqual({ person: 'lifecycle_stage' })
+  })
+
+  it('clearLifecycleMissingSlug removes one object while preserving the others', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'a')
+    recordLifecycleMissingSlug(config, 'company', 'b')
+    clearLifecycleMissingSlug(config, 'person')
+    expect(readLifecycleWarnings(config)).toEqual({ company: 'b' })
+  })
+
+  it('clearLifecycleMissingSlug deletes the whole entry when no objects remain', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'person', 'a')
+    clearLifecycleMissingSlug(config, 'person')
+    expect(readLifecycleWarnings(config)).toBeUndefined()
+  })
+
+  it('clearLifecycleMissingSlug is a no-op when no warning exists for that object', () => {
+    const config = new MemoryConfig()
+    recordLifecycleMissingSlug(config, 'company', 'b')
+    clearLifecycleMissingSlug(config, 'person')
+    expect(readLifecycleWarnings(config)).toEqual({ company: 'b' })
+  })
+
+  it('returns undefined for a malformed stored entry', () => {
+    const config = new MemoryConfig()
+    config.set('diag.lifecycleWarnings', 'not-an-object')
+    expect(readLifecycleWarnings(config)).toBeUndefined()
+  })
+
+  it('drops non-string entries when reading', () => {
+    const config = new MemoryConfig()
+    config.set('diag.lifecycleWarnings', { person: 'lifecycle_stage', company: 42 })
+    expect(readLifecycleWarnings(config)).toEqual({ person: 'lifecycle_stage' })
+  })
+
+  it('returns undefined when stored entry has only empty strings', () => {
+    const config = new MemoryConfig()
+    config.set('diag.lifecycleWarnings', { person: '' })
+    expect(readLifecycleWarnings(config)).toBeUndefined()
   })
 })

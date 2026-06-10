@@ -177,3 +177,48 @@ describe('extract helpers', () => {
     expect(extractWebsiteUrl(record)).toBeUndefined()
   })
 })
+
+describe('buildCompanyRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', () => {
+  function recordWithLifecycle(values: Record<string, unknown>): RecordItem {
+    return makeRecord({
+      ...companyValues({ name: 'Acme', domain: 'acme.com' }),
+      ...values,
+    })
+  }
+
+  it('appends lifecycle value after the domain when slug is set (status type)', () => {
+    const record = recordWithLifecycle({ lifecycle_stage: [{ status: { title: 'Customer' } }] })
+    const rows = buildCompanyRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('acme.com · Customer')
+  })
+
+  it('appends lifecycle value after the location fallback', () => {
+    const record = makeRecord({
+      ...companyValues({ name: 'Acme', locality: 'Paris', country: 'FR' }),
+      lifecycle_stage: [{ value: 'Lead' }],
+    })
+    const rows = buildCompanyRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('Paris, FR · Lead')
+  })
+
+  it('uses FR-013 default (no trailing segment) when lifecycleSlug is undefined', () => {
+    const record = recordWithLifecycle({ lifecycle_stage: [{ status: { title: 'Customer' } }] })
+    const rows = buildCompanyRows(defaults({ records: [record] }), makeStrings())
+    expect(rows[0].subtitle).toBe('acme.com')
+  })
+
+  it('uses FR-013 default when slug is set but record has no value for it', () => {
+    const record = recordWithLifecycle({})
+    const rows = buildCompanyRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('acme.com')
+  })
+
+  it('renders lifecycle alone when neither domain nor location is set', () => {
+    const record = makeRecord({
+      ...companyValues({ name: 'Acme' }),
+      lifecycle_stage: [{ value: 'Lead' }],
+    })
+    const rows = buildCompanyRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('Lead')
+  })
+})

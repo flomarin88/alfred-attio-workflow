@@ -177,3 +177,38 @@ describe('extract helpers', () => {
     expect(extractValue(record)).toBe('$100')
   })
 })
+
+describe('buildDealRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', () => {
+  it('appends lifecycle value after stage and amount when slug is set (status)', () => {
+    const record = makeRecord({
+      ...dealValues({ name: 'Acme expansion', stage: 'Discovery', amount: 50000 }),
+      lifecycle_stage: [{ status: { title: 'Won' } }],
+    })
+    const rows = buildDealRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('Discovery · $50,000 · Won')
+  })
+
+  it('appends lifecycle value when only stage is present', () => {
+    const record = makeRecord({
+      ...dealValues({ name: 'X', stage: 'Discovery' }),
+      lifecycle_stage: [{ option: { title: 'Active' } }],
+    })
+    const rows = buildDealRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('Discovery · Active')
+  })
+
+  it('uses FR-013 default (no trailing segment) when lifecycleSlug is undefined', () => {
+    const record = makeRecord({
+      ...dealValues({ name: 'X', stage: 'Discovery', amount: 1000 }),
+      lifecycle_stage: [{ status: { title: 'Won' } }],
+    })
+    const rows = buildDealRows(defaults({ records: [record] }), makeStrings())
+    expect(rows[0].subtitle).toBe('Discovery · $1,000')
+  })
+
+  it('uses FR-013 default when slug is set but the record has no value for it', () => {
+    const record = makeRecord(dealValues({ name: 'X', stage: 'Discovery', amount: 1000 }))
+    const rows = buildDealRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
+    expect(rows[0].subtitle).toBe('Discovery · $1,000')
+  })
+})

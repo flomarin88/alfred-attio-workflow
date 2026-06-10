@@ -16,8 +16,9 @@ import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
 import { type DealRow, buildDealRows } from '@common/deal'
-import { persistWorkflowError } from '@common/diag-state'
+import { clearLifecycleMissingSlug, persistWorkflowError, recordLifecycleMissingSlug } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
+import { lifecycleSlugExists } from '@common/lifecycle'
 import { createNotify } from '@common/notify'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
@@ -75,6 +76,7 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
 
     const hintDismissed = config.get(HINT_FLAG) === true
     const showCmdHint = !hintDismissed && result.data.length > 0
+    const lifecycleSlug = await resolveLifecycleSlug(client, config, alfredClient)
 
     emit(alfredClient, strings, {
       identity,
@@ -82,6 +84,7 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
       query,
       patPresent: true,
       showCmdHint,
+      lifecycleSlug,
     })
 
     if (showCmdHint) {
@@ -109,6 +112,31 @@ function buildQueryBody(query: string): Record<string, unknown> {
     sorts: baseSorts,
     limit: DEFAULT_RESULT_LIMIT,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle slug resolution (FR-033 / Story 2.5)
+// ---------------------------------------------------------------------------
+
+async function resolveLifecycleSlug(
+  client: AttioClient,
+  config: ConfigStore,
+  alfredClient: FastAlfred,
+): Promise<string | undefined> {
+  const raw = alfredClient.env.getEnv<string>(Variables.LIFECYCLE_ATTRIBUTE_DEAL, { defaultValue: '' })
+  const configured = (raw ?? '').trim()
+  if (!configured) {
+    clearLifecycleMissingSlug(config, 'deal')
+    return undefined
+  }
+  const attrs = await client.getObjectAttributes('deals')
+  if (!attrs.ok) return undefined
+  if (lifecycleSlugExists(attrs.data, configured)) {
+    clearLifecycleMissingSlug(config, 'deal')
+    return configured
+  }
+  recordLifecycleMissingSlug(config, 'deal', configured)
+  return undefined
 }
 
 // ---------------------------------------------------------------------------

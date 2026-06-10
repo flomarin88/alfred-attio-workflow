@@ -18,6 +18,7 @@
 import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
+import { extractLifecycleValue } from './lifecycle'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,12 @@ export interface DealInputs {
    * once the user has seen the hint anywhere it is silent everywhere.
    */
   showCmdHint: boolean
+  /**
+   * Slug of the configured lifecycle attribute (FR-033 / Story 2.5). When
+   * defined, its value is appended to the subtitle as `· {lifecycle_value}`
+   * AFTER stage and deal value. Undefined → FR-013 default layout.
+   */
+  lifecycleSlug?: string
 }
 
 export interface DealMod {
@@ -171,6 +178,8 @@ export function buildDealRows(inputs: DealInputs, strings: Strings): DealRow[] {
     const subtitleParts: string[] = []
     if (stage) subtitleParts.push(stage)
     if (value) subtitleParts.push(value)
+    const lifecycleValue = extractLifecycleValue(record, inputs.lifecycleSlug)
+    if (lifecycleValue) subtitleParts.push(lifecycleValue)
 
     const cmd: DealMod = {
       arg: webUrl,

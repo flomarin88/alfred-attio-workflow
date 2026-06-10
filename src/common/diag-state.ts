@@ -19,8 +19,21 @@
 import type { ConfigStore } from './attio/identity'
 
 const KEY = 'diag.lastError'
+const LIFECYCLE_KEY = 'diag.lifecycleWarnings'
 const REDACTED = '<redacted>'
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
+
+/**
+ * Objects covered by FR-033 lifecycle config. Tasks are intentionally
+ * excluded — `is_completed` already serves as their lifecycle marker.
+ */
+export type LifecycleObject = 'person' | 'company' | 'deal'
+
+export interface DiagLifecycleWarnings {
+  person?: string
+  company?: string
+  deal?: string
+}
 
 export interface DiagLastError {
   /** ISO-8601 UTC timestamp captured when the error was recorded. */
@@ -103,4 +116,49 @@ export function persistWorkflowError(
 ): void {
   const httpStatus = typeof error.httpStatus === 'number' ? error.httpStatus : undefined
   recordLastError(config, { endpoint, httpStatus })
+}
+
+/**
+ * Persists a "lifecycle slug not found in schema" warning for the given
+ * object. Called by `person`/`company`/`deal` keyword scripts when the
+ * configured `LIFECYCLE_ATTRIBUTE_*` env var doesn't match any attribute
+ * in the workspace schema (FR-033 / Story 2.5). Idempotent: writing the
+ * same slug twice does not duplicate state.
+ */
+export function recordLifecycleMissingSlug(config: ConfigStore, object: LifecycleObject, slug: string): void {
+  const current = readLifecycleWarnings(config) ?? {}
+  if (current[object] === slug) return
+  current[object] = slug
+  config.set(LIFECYCLE_KEY, current)
+}
+
+/**
+ * Clears any persisted lifecycle warning for the given object. Called
+ * when the configured slug now resolves (recovery path), or when the
+ * env var has been cleared.
+ */
+export function clearLifecycleMissingSlug(config: ConfigStore, object: LifecycleObject): void {
+  const current = readLifecycleWarnings(config)
+  if (!current || current[object] === undefined) return
+  delete current[object]
+  if (Object.keys(current).length === 0) {
+    config.delete(LIFECYCLE_KEY)
+  } else {
+    config.set(LIFECYCLE_KEY, current)
+  }
+}
+
+/**
+ * Returns the persisted lifecycle warnings, or `undefined` when none.
+ * Defensive parsing: unexpected shapes resolve to `undefined`.
+ */
+export function readLifecycleWarnings(config: ConfigStore): DiagLifecycleWarnings | undefined {
+  const raw = config.get(LIFECYCLE_KEY)
+  if (raw === null || typeof raw !== 'object') return undefined
+  const obj = raw as Record<string, unknown>
+  const out: DiagLifecycleWarnings = {}
+  if (typeof obj.person === 'string' && obj.person.length > 0) out.person = obj.person
+  if (typeof obj.company === 'string' && obj.company.length > 0) out.company = obj.company
+  if (typeof obj.deal === 'string' && obj.deal.length > 0) out.deal = obj.deal
+  return Object.keys(out).length > 0 ? out : undefined
 }

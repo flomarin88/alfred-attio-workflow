@@ -646,6 +646,69 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<key>variable</key>
 			<string>DIAG_INCLUDE_IDENTITY</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>e.g. lifecycle_stage</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional. Workspace slug of the lifecycle attribute for people (e.g. lifecycle_stage). When set, its value is appended to the person row subtitle as · {value}.</string>
+			<key>label</key>
+			<string>Lifecycle attribute slug — person</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>LIFECYCLE_ATTRIBUTE_PERSON</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>e.g. lifecycle_stage</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional. Workspace slug of the lifecycle attribute for companies. When set, its value is appended to the company row subtitle as · {value}.</string>
+			<key>label</key>
+			<string>Lifecycle attribute slug — company</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>LIFECYCLE_ATTRIBUTE_COMPANY</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>e.g. stage</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Optional. Workspace slug of the lifecycle attribute for deals (overrides the default stage rendering). When set, its value is appended to the deal row subtitle as · {value}.</string>
+			<key>label</key>
+			<string>Lifecycle attribute slug — deal</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>LIFECYCLE_ATTRIBUTE_DEAL</string>
+		</dict>
 	</array>
 	<key>variablesdontexport</key>
 	<array/>

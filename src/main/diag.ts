@@ -11,7 +11,7 @@ import { FastAlfred } from 'fast-alfred'
 import { type ConfigStore, loadIdentity } from '@common/attio/identity'
 import { type DiagCategory, createCache } from '@common/cache'
 import { buildDiagRows } from '@common/diag'
-import { readLastError } from '@common/diag-state'
+import { readLastError, readLifecycleWarnings } from '@common/diag-state'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { createStrings } from '@common/strings'
 import { Variables } from '@common/variables.enum'
@@ -33,6 +33,7 @@ const CATEGORIES: readonly DiagCategory[] = ['tasks', 'people', 'companies', 'de
 
     const identity = loadIdentity(config)
     const lastError = readLastError(config)
+    const lifecycleWarnings = readLifecycleWarnings(config)
 
     const now = Date.now()
     const cacheAges: Partial<Record<DiagCategory, number>> = {}
@@ -51,6 +52,7 @@ const CATEGORIES: readonly DiagCategory[] = ['tasks', 'people', 'companies', 'de
         patPresent: Boolean(pat),
         cacheAges,
         lastError,
+        lifecycleWarnings,
         workflowVersion: alfredClient.alfredInfo.workflowVersion() || '0.0.0',
         includeIdentity,
       },

@@ -32,6 +32,7 @@
   "diag.token.configured": "Token: configured",
   "diag.token.missing": "Token: missing",
   "diag.cache.title": "Cache age",
+  "diag.lifecycle.title": "Lifecycle slug not found in schema",
   "diag.lastError.title": "Last error",
   "diag.version.title": "Workflow version",
   "refresh.success.title": "Cache cleared — {object_count} objects, {attribute_set_count} attribute sets",

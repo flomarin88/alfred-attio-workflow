@@ -12,7 +12,13 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { Identity } from '../../src/common/attio/identity'
-import { type DiagInputs, buildDiagRows, formatAge, formatCacheAges } from '../../src/common/diag'
+import {
+  type DiagInputs,
+  buildDiagRows,
+  formatAge,
+  formatCacheAges,
+  formatLifecycleWarnings,
+} from '../../src/common/diag'
 import { type Strings, createStrings } from '../../src/common/strings'
 
 const SAMPLE_IDENTITY: Identity = {
@@ -193,6 +199,66 @@ describe('buildDiagRows — configured workflow', () => {
     const row6 = rows.find((r) => r.uid === 'diag-6')!
     expect(row6.title).toBe('Workflow version')
     expect(row6.subtitle).toBe('1.2.3')
+  })
+})
+
+describe('formatLifecycleWarnings — Story 2.5', () => {
+  it('returns empty string when no warnings', () => {
+    expect(formatLifecycleWarnings(undefined)).toBe('')
+    expect(formatLifecycleWarnings({})).toBe('')
+  })
+
+  it('renders one entry per object in fixed order person · company · deal', () => {
+    expect(formatLifecycleWarnings({ deal: 'd', person: 'p', company: 'c' })).toBe('person: p · company: c · deal: d')
+  })
+
+  it('skips missing entries', () => {
+    expect(formatLifecycleWarnings({ company: 'tier' })).toBe('company: tier')
+  })
+})
+
+describe('buildDiagRows — lifecycle warnings (Story 2.5)', () => {
+  it('does NOT insert a lifecycle row when warnings are undefined', () => {
+    const rows = buildDiagRows(defaults({ patPresent: true }), makeStrings())
+    expect(rows.map((r) => r.uid)).not.toContain('diag-lifecycle')
+    expect(rows).toHaveLength(7)
+  })
+
+  it('does NOT insert a lifecycle row when the warnings object is empty', () => {
+    const rows = buildDiagRows(defaults({ patPresent: true, lifecycleWarnings: {} }), makeStrings())
+    expect(rows.map((r) => r.uid)).not.toContain('diag-lifecycle')
+    expect(rows).toHaveLength(7)
+  })
+
+  it('inserts the lifecycle row BEFORE diag-5 when at least one warning exists', () => {
+    const rows = buildDiagRows(
+      defaults({ patPresent: true, lifecycleWarnings: { person: 'lifecycle_stage' } }),
+      makeStrings(),
+    )
+    expect(rows.map((r) => r.uid)).toEqual([
+      'diag-0',
+      'diag-1',
+      'diag-2',
+      'diag-3',
+      'diag-4',
+      'diag-lifecycle',
+      'diag-5',
+      'diag-6',
+    ])
+  })
+
+  it('renders the warning subtitle with all configured objects', () => {
+    const rows = buildDiagRows(
+      defaults({
+        patPresent: true,
+        lifecycleWarnings: { person: 'lifecycle_stage', company: 'tier', deal: 'pipeline' },
+      }),
+      makeStrings(),
+    )
+    const row = rows.find((r) => r.uid === 'diag-lifecycle')!
+    expect(row.title).toBe('Lifecycle slug not found in schema')
+    expect(row.subtitle).toBe('person: lifecycle_stage · company: tier · deal: pipeline')
+    expect(row.icon).toBe('warning')
   })
 })
 

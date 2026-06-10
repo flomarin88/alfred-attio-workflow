@@ -17,6 +17,7 @@
 import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
+import { extractLifecycleValue } from './lifecycle'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -28,6 +29,12 @@ export interface CompanyInputs {
   records: RecordItem[]
   query: string
   patPresent: boolean
+  /**
+   * Slug of the configured lifecycle attribute (FR-033 / Story 2.5). When
+   * defined, the value at `record.values[slug]` is appended to the
+   * subtitle as `· {lifecycle_value}`. Undefined → domain/location only.
+   */
+  lifecycleSlug?: string
 }
 
 export interface CompanyMod {
@@ -150,7 +157,12 @@ export function buildCompanyRows(inputs: CompanyInputs, strings: Strings): Compa
     const website = extractWebsiteUrl(record)
     const webUrl = record.webUrl
 
-    const subtitle = domain ?? location ?? ''
+    const subtitleParts: string[] = []
+    const baseSegment = domain ?? location
+    if (baseSegment) subtitleParts.push(baseSegment)
+    const lifecycleValue = extractLifecycleValue(record, inputs.lifecycleSlug)
+    if (lifecycleValue) subtitleParts.push(lifecycleValue)
+    const subtitle = subtitleParts.join(' · ')
 
     const cmd: CompanyMod = website
       ? {

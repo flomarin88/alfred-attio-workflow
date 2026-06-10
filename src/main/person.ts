@@ -19,8 +19,9 @@ import type { ConfigStore, Identity } from '@common/attio/identity'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
-import { persistWorkflowError } from '@common/diag-state'
+import { clearLifecycleMissingSlug, persistWorkflowError, recordLifecycleMissingSlug } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
+import { lifecycleSlugExists } from '@common/lifecycle'
 import { createNotify } from '@common/notify'
 import { type PersonRow, buildPersonRows, extractCompanyId, hasMissingLinkedIn } from '@common/person'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
@@ -79,6 +80,7 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     }
 
     const companyNames = await resolveCompanyNames(client, result.data)
+    const lifecycleSlug = await resolveLifecycleSlug(client, config, alfredClient)
 
     const hintDismissed = config.get(HINT_FLAG) === true
     const showLinkedInHint = !hintDismissed && hasMissingLinkedIn(result.data)
@@ -90,6 +92,7 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
       query,
       patPresent: true,
       showLinkedInHint,
+      lifecycleSlug,
     })
 
     if (showLinkedInHint) {
@@ -166,6 +169,34 @@ function extractCompanyName(
   if (!first) return undefined
   const value = first.value
   return typeof value === 'string' && value.length > 0 ? value : undefined
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle slug resolution (FR-033 / Story 2.5)
+// ---------------------------------------------------------------------------
+
+async function resolveLifecycleSlug(
+  client: AttioClient,
+  config: ConfigStore,
+  alfredClient: FastAlfred,
+): Promise<string | undefined> {
+  const raw = alfredClient.env.getEnv<string>(Variables.LIFECYCLE_ATTRIBUTE_PERSON, { defaultValue: '' })
+  const configured = (raw ?? '').trim()
+  if (!configured) {
+    clearLifecycleMissingSlug(config, 'person')
+    return undefined
+  }
+  const attrs = await client.getObjectAttributes('people')
+  // Schema fetch failure → silently skip the suffix without persisting a
+  // warning. The next refresh will re-evaluate; meanwhile FR-013 default
+  // keeps working.
+  if (!attrs.ok) return undefined
+  if (lifecycleSlugExists(attrs.data, configured)) {
+    clearLifecycleMissingSlug(config, 'person')
+    return configured
+  }
+  recordLifecycleMissingSlug(config, 'person', configured)
+  return undefined
 }
 
 // ---------------------------------------------------------------------------

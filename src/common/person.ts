@@ -18,6 +18,7 @@
 import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
+import { extractLifecycleValue } from './lifecycle'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -43,6 +44,14 @@ export interface PersonInputs {
    * the cmd mod for those rows.
    */
   showLinkedInHint: boolean
+  /**
+   * Slug of the configured lifecycle attribute (FR-033 / Story 2.5). When
+   * defined, the value at `record.values[slug]` is appended to the
+   * subtitle as `· {lifecycle_value}`. Undefined → FR-013 default layout.
+   * The keyword script verifies slug existence in the schema BEFORE
+   * passing it here; unresolved slugs result in `undefined`.
+   */
+  lifecycleSlug?: string
 }
 
 export interface PersonMod {
@@ -154,6 +163,8 @@ export function buildPersonRows(inputs: PersonInputs, strings: Strings): PersonR
     const subtitleParts: string[] = []
     if (jobTitle) subtitleParts.push(jobTitle)
     if (companyName) subtitleParts.push(companyName)
+    const lifecycleValue = extractLifecycleValue(record, inputs.lifecycleSlug)
+    if (lifecycleValue) subtitleParts.push(lifecycleValue)
 
     const cmd: PersonMod = linkedInUrl
       ? {

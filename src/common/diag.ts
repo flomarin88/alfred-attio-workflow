@@ -15,7 +15,7 @@
 import type { Identity } from './attio/identity'
 import type { DiagCategory } from './cache'
 import type { IconKey } from './constants'
-import type { DiagLastError } from './diag-state'
+import type { DiagLastError, DiagLifecycleWarnings } from './diag-state'
 import type { Strings } from './strings'
 
 const DASH = '—'
@@ -32,6 +32,13 @@ export interface DiagInputs {
   cacheAges: Partial<Record<DiagCategory, number>>
   /** Most recent persisted error (record IDs already redacted). */
   lastError?: DiagLastError
+  /**
+   * Persisted lifecycle slug warnings per object (FR-033 / Story 2.5).
+   * When defined and non-empty, an extra `diag-lifecycle` row is inserted
+   * just before the last-error row. `undefined` keeps the snapshot at
+   * its baseline 6/7 rows.
+   */
+  lifecycleWarnings?: DiagLifecycleWarnings
   /** Workflow semver from `alfredInfo.workflowVersion()`. */
   workflowVersion: string
   /** When false, row 2 (`Me: …`) is suppressed. */
@@ -67,6 +74,20 @@ export function formatAge(ms: number | undefined): string {
  */
 export function formatCacheAges(ages: Partial<Record<DiagCategory, number>>): string {
   return CATEGORY_ORDER.map((category) => `${category} ${formatAge(ages[category])}`).join(' · ')
+}
+
+/**
+ * Renders the lifecycle warnings subtitle. Returns an empty string when
+ * no warnings are present (caller suppresses the row). Order is fixed
+ * (person · company · deal) so the snapshot stays diff-friendly.
+ */
+export function formatLifecycleWarnings(warnings: DiagLifecycleWarnings | undefined): string {
+  if (!warnings) return ''
+  const entries: string[] = []
+  if (warnings.person) entries.push(`person: ${warnings.person}`)
+  if (warnings.company) entries.push(`company: ${warnings.company}`)
+  if (warnings.deal) entries.push(`deal: ${warnings.deal}`)
+  return entries.join(' · ')
 }
 
 function row(spec: Omit<DiagRow, 'valid' | 'arg'>): DiagRow {
@@ -134,6 +155,22 @@ export function buildDiagRows(inputs: DiagInputs, strings: Strings): DiagRow[] {
       icon: 'info',
     }),
   )
+
+  // Row 4b (optional) — lifecycle config warnings (FR-033 / Story 2.5).
+  // Inserted between cache and last-error ONLY when at least one object
+  // has a persisted "slug not found in schema" entry. Absent in the
+  // default case so the snapshot stays at 6/7 rows.
+  const lifecycleSubtitle = formatLifecycleWarnings(inputs.lifecycleWarnings)
+  if (lifecycleSubtitle) {
+    rows.push(
+      row({
+        uid: 'diag-lifecycle',
+        title: strings.t('diag.lifecycle.title'),
+        subtitle: lifecycleSubtitle,
+        icon: 'warning',
+      }),
+    )
+  }
 
   // Row 5 — last error. Trust the redaction step that ran at persistence
   // time (see `diag-state.recordLastError`). NEVER surface raw record IDs

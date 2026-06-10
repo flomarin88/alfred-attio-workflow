@@ -23,7 +23,12 @@ import type { Strings } from './strings'
 
 export interface FicheRow {
   label: string
-  value: string
+  /**
+   * Plain string (XSS-escaped at render time) OR an `Html` fragment
+   * previously rendered by the caller via the safe `html\`\`` tag.
+   * Story 3.4 introduces the `Html` variant for the deal stage pill.
+   */
+  value: string | Html
 }
 
 export interface FicheShellInput {
@@ -99,6 +104,18 @@ dd {
   letter-spacing: -0.01em;
   color: var(--ink-primary);
   word-break: break-word;
+}
+.pill-status {
+  display: inline-block;
+  background: var(--surface-raised);
+  border: 1px solid var(--outline);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
 }
 </style>`
 

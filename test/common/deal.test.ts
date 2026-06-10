@@ -13,7 +13,16 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { RecordItem } from '../../src/common/attio/schemas'
-import { type DealInputs, buildDealRows, extractStage, extractValue } from '../../src/common/deal'
+import {
+  type DealInputs,
+  buildDealRows,
+  extractAssociatedCompanyId,
+  extractCloseDate,
+  extractLastUpdated,
+  extractPrimaryPersonId,
+  extractStage,
+  extractValue,
+} from '../../src/common/deal'
 import { type Strings, createStrings } from '../../src/common/strings'
 
 function makeStrings(): Strings {
@@ -210,5 +219,61 @@ describe('buildDealRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', () 
     const record = makeRecord(dealValues({ name: 'X', stage: 'Discovery', amount: 1000 }))
     const rows = buildDealRows(defaults({ records: [record], lifecycleSlug: 'lifecycle_stage' }), makeStrings())
     expect(rows[0].subtitle).toBe('Discovery · $1,000')
+  })
+})
+
+describe('extractCloseDate (Story 3.4)', () => {
+  it('reads close_date[0].value (ISO string)', () => {
+    const record = makeRecord({ close_date: [{ value: '2026-09-15T00:00:00Z' }] })
+    expect(extractCloseDate(record)).toBe('2026-09-15T00:00:00Z')
+  })
+
+  it('returns undefined when no close_date entry', () => {
+    expect(extractCloseDate(makeRecord({}))).toBeUndefined()
+  })
+})
+
+describe('extractAssociatedCompanyId (Story 3.4)', () => {
+  it('reads target_record_id from associated_company[0]', () => {
+    const record = makeRecord({ associated_company: [{ target_record_id: 'rec_acme' }] })
+    expect(extractAssociatedCompanyId(record)).toBe('rec_acme')
+  })
+
+  it('falls back to record_id', () => {
+    const record = makeRecord({ associated_company: [{ record_id: 'rec_acme' }] })
+    expect(extractAssociatedCompanyId(record)).toBe('rec_acme')
+  })
+
+  it('returns undefined when no associated_company entry', () => {
+    expect(extractAssociatedCompanyId(makeRecord({}))).toBeUndefined()
+  })
+})
+
+describe('extractPrimaryPersonId (Story 3.4)', () => {
+  it('returns the FIRST entry from associated_people', () => {
+    const record = makeRecord({
+      associated_people: [{ target_record_id: 'p1' }, { target_record_id: 'p2' }],
+    })
+    expect(extractPrimaryPersonId(record)).toBe('p1')
+  })
+
+  it('returns undefined when no associated_people entry', () => {
+    expect(extractPrimaryPersonId(makeRecord({}))).toBeUndefined()
+  })
+})
+
+describe('extractLastUpdated (Story 3.4)', () => {
+  it('prefers the envelope updatedAt', () => {
+    const record = makeRecord({}, { updatedAt: '2026-06-09T08:00:00Z' })
+    expect(extractLastUpdated(record)).toBe('2026-06-09T08:00:00Z')
+  })
+
+  it('falls back to values.last_setting_action_at[0].value', () => {
+    const record = makeRecord({ last_setting_action_at: [{ value: '2026-06-08T10:30:00Z' }] })
+    expect(extractLastUpdated(record)).toBe('2026-06-08T10:30:00Z')
+  })
+
+  it('returns undefined when neither is present', () => {
+    expect(extractLastUpdated(makeRecord({}))).toBeUndefined()
   })
 })

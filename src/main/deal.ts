@@ -12,14 +12,27 @@ import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
 import { AttioClient } from '@common/attio/client'
 import type { ConfigStore, Identity } from '@common/attio/identity'
+import type { RecordItem } from '@common/attio/schemas'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
 import { DEFAULT_RESULT_LIMIT } from '@common/constants'
-import { type DealRow, buildDealRows } from '@common/deal'
+import {
+  type DealRow,
+  buildDealRows,
+  extractAssociatedCompanyId,
+  extractCloseDate,
+  extractDealName,
+  extractLastUpdated,
+  extractPrimaryPersonId,
+  extractStage,
+  extractValue,
+} from '@common/deal'
+import { renderDealFiche } from '@common/deal-fiche'
 import { clearLifecycleMissingSlug, persistWorkflowError, recordLifecycleMissingSlug } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { lifecycleSlugExists } from '@common/lifecycle'
 import { createNotify } from '@common/notify'
+import { writeQuicklookHtml } from '@common/quicklook'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
 import { Variables } from '@common/variables.enum'
@@ -38,13 +51,17 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const query = (alfredClient.input ?? '').trim()
 
     if (!pat) {
-      emit(alfredClient, strings, {
-        identity: undefined,
-        records: [],
-        query,
-        patPresent: false,
-        showCmdHint: false,
-      })
+      const rows = buildDealRows(
+        {
+          identity: undefined,
+          records: [],
+          query,
+          patPresent: false,
+          showCmdHint: false,
+        },
+        strings,
+      )
+      alfredClient.output(toScriptFilter(rows))
       return
     }
 
@@ -78,14 +95,21 @@ const HINT_FLAG = 'cmd_enter_hint_dismissed'
     const showCmdHint = !hintDismissed && result.data.length > 0
     const lifecycleSlug = await resolveLifecycleSlug(client, config, alfredClient)
 
-    emit(alfredClient, strings, {
-      identity,
-      records: result.data,
-      query,
-      patPresent: true,
-      showCmdHint,
-      lifecycleSlug,
-    })
+    const rows = buildDealRows(
+      {
+        identity,
+        records: result.data,
+        query,
+        patPresent: true,
+        showCmdHint,
+        lifecycleSlug,
+      },
+      strings,
+    )
+
+    await attachDealFiches(rows, result.data, client, alfredClient, strings)
+
+    alfredClient.output(toScriptFilter(rows))
 
     if (showCmdHint) {
       // First render IS the hint — persist immediately so subsequent
@@ -140,13 +164,89 @@ async function resolveLifecycleSlug(
 }
 
 // ---------------------------------------------------------------------------
-// Output helpers
+// Story 3.4 — fiche generation
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildDealRows>[0]): void {
-  const rows = buildDealRows(inputs, strings)
-  alfredClient.output(toScriptFilter(rows))
+async function attachDealFiches(
+  rows: DealRow[],
+  records: RecordItem[],
+  client: AttioClient,
+  alfredClient: FastAlfred,
+  strings: Strings,
+): Promise<void> {
+  const cacheDir = alfredClient.alfredInfo.cache()
+  if (!cacheDir) return
+  const bundleDir = process.cwd()
+  const recordsById = new Map<string, RecordItem>()
+  for (const record of records) recordsById.set(record.id, record)
+
+  const companyIds = new Set<string>()
+  const personIds = new Set<string>()
+  for (const record of records) {
+    const c = extractAssociatedCompanyId(record)
+    if (c) companyIds.add(c)
+    const p = extractPrimaryPersonId(record)
+    if (p) personIds.add(p)
+  }
+
+  const [companyNames, personNames] = await Promise.all([
+    resolveNames(client, 'companies', companyIds),
+    resolveNames(client, 'people', personIds),
+  ])
+
+  await Promise.all(
+    rows.map(async (row) => {
+      if (!row.uid.startsWith('deal-')) return
+      const id = row.uid.slice('deal-'.length)
+      const record = recordsById.get(id)
+      if (!record) return
+      const companyId = extractAssociatedCompanyId(record)
+      const personId = extractPrimaryPersonId(record)
+      const html = renderDealFiche(
+        {
+          id,
+          name: extractDealName(record),
+          stage: extractStage(record),
+          value: extractValue(record, strings.locale === 'fr' ? 'fr-FR' : 'en-US'),
+          linkedCompanyName: companyId ? companyNames.get(companyId) : undefined,
+          primaryPersonName: personId ? personNames.get(personId) : undefined,
+          closeDateAt: extractCloseDate(record),
+          lastUpdatedAt: extractLastUpdated(record),
+        },
+        { bundleDir, strings },
+      )
+      const written = await writeQuicklookHtml(cacheDir, `deal-${id}.html`, html)
+      if (written) row.quicklookurl = `file://${written}`
+    }),
+  )
 }
+
+async function resolveNames(
+  client: AttioClient,
+  slug: 'companies' | 'people',
+  ids: Set<string>,
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>()
+  await Promise.all(
+    [...ids].map(async (id) => {
+      const result = await client.getRecord(slug, id)
+      if (!result.ok) return
+      const arr = (result.data.values as Record<string, unknown>).name as Array<Record<string, unknown>> | undefined
+      const first = arr?.[0]
+      if (!first) return
+      const name =
+        (typeof first.full_name === 'string' && first.full_name.length > 0 && first.full_name) ||
+        (typeof first.value === 'string' && first.value.length > 0 && first.value) ||
+        undefined
+      if (name) out.set(id, name)
+    }),
+  )
+  return out
+}
+
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
 function handleError(
   alfredClient: FastAlfred,
@@ -183,6 +283,7 @@ function toScriptFilter(rows: DealRow[]): AlfredScriptFilter {
       icon: spec.icon,
       valid: spec.valid,
       arg: spec.arg,
+      ...(spec.quicklookurl !== undefined ? { quicklookurl: spec.quicklookurl } : {}),
       ...(spec.mods !== undefined ? { mods: spec.mods } : {}),
     }),
   ) as unknown as AlfredListItem[]

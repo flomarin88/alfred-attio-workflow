@@ -1,11 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`renderPersonFiche — snapshot (diff stability) > matches the stored snapshot for a fully-populated person 1`] = `
+exports[`renderDealFiche — snapshot (diff stability) > matches the stored snapshot for a fully-populated deal 1`] = `
 "<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Jane Doe</title>
+<title>Acme expansion</title>
 <style>
 @font-face {
   font-family: 'Inter';
@@ -142,10 +142,10 @@ dd {
 <body>
 <main>
 <section>
-<p class="kind">PERSON</p>
-<h1 class="display">Jane Doe</h1>
+<p class="kind">DEAL</p>
+<h1 class="display">Acme expansion</h1>
 <dl>
-<dt>Job title</dt><dd>Head of Sales</dd><dt>Email</dt><dd>jane@acme.com</dd><dt>Phone</dt><dd>+33 6 12 34 56 78</dd><dt>Company</dt><dd>Acme Inc.</dd><dt>LinkedIn</dt><dd>https://linkedin.com/in/jane</dd><dt>Last updated</dt><dd>Jun 9, 2026</dd>
+<dt>Stage</dt><dd><span class="pill-status">Discovery</span></dd><dt>Value</dt><dd>$50,000</dd><dt>Company</dt><dd>Acme Inc.</dd><dt>Primary contact</dt><dd>Jane Doe</dd><dt>Close date</dt><dd>Sep 15, 2026</dd><dt>Last updated</dt><dd>Jun 9, 2026</dd>
 </dl>
 </section>
 </main>
@@ -153,12 +153,12 @@ dd {
 </html>"
 `;
 
-exports[`renderPersonFiche — snapshot (diff stability) > matches the stored snapshot for a minimal person (name only) 1`] = `
+exports[`renderDealFiche — snapshot (diff stability) > matches the stored snapshot for a non-Latin stage label 1`] = `
 "<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Solo</title>
+<title>Acme expansion</title>
 <style>
 @font-face {
   font-family: 'Inter';
@@ -295,10 +295,10 @@ dd {
 <body>
 <main>
 <section>
-<p class="kind">PERSON</p>
-<h1 class="display">Solo</h1>
+<p class="kind">DEAL</p>
+<h1 class="display">Acme expansion</h1>
 <dl>
-
+<dt>Stage</dt><dd><span class="pill-status">進行中</span></dd><dt>Value</dt><dd>$50,000</dd><dt>Company</dt><dd>Acme Inc.</dd><dt>Primary contact</dt><dd>Jane Doe</dd><dt>Close date</dt><dd>Sep 15, 2026</dd><dt>Last updated</dt><dd>Jun 9, 2026</dd>
 </dl>
 </section>
 </main>

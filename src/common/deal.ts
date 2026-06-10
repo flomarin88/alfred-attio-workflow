@@ -58,6 +58,8 @@ export interface DealRow {
   valid: boolean
   arg: string
   mods?: { cmd?: DealMod }
+  /** Set by the keyword script after the Quick Look fiche is written. */
+  quicklookurl?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -111,6 +113,46 @@ export function extractStage(record: RecordItem): string | undefined {
     if (title) return title
   }
   return readString(first, 'value', 'title')
+}
+
+/**
+ * Close date / due date — `values.close_date[0].value` (ISO). Returns
+ * the raw ISO; the fiche renderer formats per active locale.
+ */
+export function extractCloseDate(record: RecordItem): string | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).close_date)
+  return readString(arr?.[0], 'value')
+}
+
+/**
+ * Associated-company record ID — Attio deals link to a company via the
+ * `associated_company` attribute. Returns the `target_record_id` (slug
+ * form) or `record_id` (UUID form) of the FIRST linked company.
+ */
+export function extractAssociatedCompanyId(record: RecordItem): string | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).associated_company)
+  return readString(arr?.[0], 'target_record_id', 'record_id')
+}
+
+/**
+ * Primary linked person record ID — Attio deals expose
+ * `associated_people` as a multi-reference; the FIRST entry is treated
+ * as the primary contact for V1.
+ */
+export function extractPrimaryPersonId(record: RecordItem): string | undefined {
+  const arr = asArray((record.values as Record<string, unknown>).associated_people)
+  return readString(arr?.[0], 'target_record_id', 'record_id')
+}
+
+/**
+ * Last-updated timestamp. Prefers envelope `updatedAt`, falls back to
+ * `values.last_setting_action_at[0].value`. Mirrors the helper in
+ * `person.ts` and `company.ts`.
+ */
+export function extractLastUpdated(record: RecordItem): string | undefined {
+  if (record.updatedAt) return record.updatedAt
+  const arr = asArray((record.values as Record<string, unknown>).last_setting_action_at)
+  return readString(arr?.[0], 'value')
 }
 
 /**

@@ -21,53 +21,30 @@
 				<false/>
 			</dict>
 		</array>
-		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-				<key>modifiers</key>
-				<integer>1048576</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>D996D95C-AE52-48C5-8AA2-573817584A90</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
-				<key>modifiers</key>
-				<integer>1048576</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>32E2DB28-E67F-4A11-9156-A4023FAF8101</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
@@ -97,6 +74,29 @@
 				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>D996D95C-AE52-48C5-8AA2-573817584A90</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -183,104 +183,6 @@
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>B4760792-AF43-4BAD-8098-E973611BC9E5</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>deal</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Searching deals…</string>
-				<key>script</key>
-				<string>./esbuild/assets/run-node.sh esbuild/deal.js "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Find a deal · ⏎ opens in Attio</string>
-				<key>title</key>
-				<string>Deal</string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>D996D95C-AE52-48C5-8AA2-573817584A90</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>task</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string>Searching tasks…</string>
-				<key>script</key>
-				<string>./esbuild/assets/run-node.sh esbuild/task.js "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>Find a task by content · ⏎ opens in Attio</string>
-				<key>title</key>
-				<string>Task</string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>32E2DB28-E67F-4A11-9156-A4023FAF8101</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -530,6 +432,104 @@
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>deal</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching deals…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/deal.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Find a deal · ⏎ opens in Attio</string>
+				<key>title</key>
+				<string>Deal</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>D996D95C-AE52-48C5-8AA2-573817584A90</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>task</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching tasks…</string>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/task.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Find a task by content · ⏎ opens in Attio</string>
+				<key>title</key>
+				<string>Task</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>32E2DB28-E67F-4A11-9156-A4023FAF8101</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>TODO - fill README
@@ -544,6 +544,13 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<real>325</real>
 			<key>ypos</key>
 			<real>400</real>
+		</dict>
+		<key>32E2DB28-E67F-4A11-9156-A4023FAF8101</key>
+		<dict>
+			<key>xpos</key>
+			<real>600</real>
+			<key>ypos</key>
+			<real>650</real>
 		</dict>
 		<key>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</key>
 		<dict>
@@ -580,13 +587,6 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<key>ypos</key>
 			<real>265</real>
 		</dict>
-		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
-		<dict>
-			<key>xpos</key>
-			<real>600</real>
-			<key>ypos</key>
-			<real>490</real>
-		</dict>
 		<key>D996D95C-AE52-48C5-8AA2-573817584A90</key>
 		<dict>
 			<key>xpos</key>
@@ -594,12 +594,12 @@ https://github.com/flomarin88/alfred-attio-workflow</string>
 			<key>ypos</key>
 			<real>570</real>
 		</dict>
-		<key>32E2DB28-E67F-4A11-9156-A4023FAF8101</key>
+		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
 		<dict>
 			<key>xpos</key>
 			<real>600</real>
 			<key>ypos</key>
-			<real>650</real>
+			<real>490</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

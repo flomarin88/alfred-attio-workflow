@@ -1,0 +1,307 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderTaskFiche — snapshot (diff stability) > matches the stored snapshot for a fully-populated task 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Follow up with Jane on the contract</title>
+<style>
+@font-face {
+  font-family: 'Inter';
+  src: url('file:///Users/test/Library/Alfred/workflow.bundle/assets/fonts/Inter.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('file:///Users/test/Library/Alfred/workflow.bundle/assets/fonts/JetBrainsMono.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+<style>
+:root {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #fafafa;
+  --ink-primary: #1c1d1f;
+  --ink-secondary: #54565b;
+  --ink-tertiary: #6e7077;
+  --divider: #e8e9eb;
+  --outline: #9ea0a6;
+  --accent: #266df0;
+  --accent-hover: #1f5dd1;
+  --on-accent: #ffffff;
+  --success: #0fc27b;
+  --warning: #f5b900;
+  --error: #ff5b59;
+  --on-error: #ffffff;
+  --highlight: #fff8d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101113;
+    --surface: #101113;
+    --surface-raised: #1a1c1f;
+    --ink-primary: #f5f5f7;
+    --ink-secondary: #b7b9be;
+    --ink-tertiary: #9b9da3;
+    --divider: #26282c;
+    --outline: #5e6066;
+    --accent: #4a86ff;
+    --accent-hover: #6a9bff;
+    --on-accent: #ffffff;
+    --success: #10cc82;
+    --warning: #ffc827;
+    --error: #ff6e6c;
+    --on-error: #ffffff;
+    --highlight: #3a3415;
+  }
+}
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--ink-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-size: 14px;
+  line-height: 1.5;
+}
+</style>
+<style>
+main {
+  margin: 0;
+  padding: 20px;
+  max-width: 540px;
+}
+section {
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  padding: 20px;
+}
+.kind {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+h1.display {
+  margin: 0 0 16px;
+  font-family: 'Inter Display', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink-primary);
+}
+dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  row-gap: 8px;
+  column-gap: 16px;
+  margin: 0;
+}
+dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  word-break: break-word;
+}
+.pill-status {
+  display: inline-block;
+  background: var(--surface-raised);
+  border: 1px solid var(--outline);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+}
+</style>
+</head>
+<body>
+<main>
+<section>
+<p class="kind">TASK</p>
+<h1 class="display">Follow up with Jane on the contract</h1>
+<dl>
+<dt>Deadline</dt><dd>Today 17:00</dd><dt>Assignee</dt><dd>Me</dd><dt>Linked person</dt><dd>Jane Doe</dd><dt>Linked deal</dt><dd>Acme expansion</dd><dt>Linked company</dt><dd>Acme Inc.</dd>
+</dl>
+</section>
+</main>
+</body>
+</html>"
+`;
+
+exports[`renderTaskFiche — snapshot (diff stability) > matches the stored snapshot for an overdue undated-style minimal task 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bare task</title>
+<style>
+@font-face {
+  font-family: 'Inter';
+  src: url('file:///Users/test/Library/Alfred/workflow.bundle/assets/fonts/Inter.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('file:///Users/test/Library/Alfred/workflow.bundle/assets/fonts/JetBrainsMono.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
+<style>
+:root {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #fafafa;
+  --ink-primary: #1c1d1f;
+  --ink-secondary: #54565b;
+  --ink-tertiary: #6e7077;
+  --divider: #e8e9eb;
+  --outline: #9ea0a6;
+  --accent: #266df0;
+  --accent-hover: #1f5dd1;
+  --on-accent: #ffffff;
+  --success: #0fc27b;
+  --warning: #f5b900;
+  --error: #ff5b59;
+  --on-error: #ffffff;
+  --highlight: #fff8d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101113;
+    --surface: #101113;
+    --surface-raised: #1a1c1f;
+    --ink-primary: #f5f5f7;
+    --ink-secondary: #b7b9be;
+    --ink-tertiary: #9b9da3;
+    --divider: #26282c;
+    --outline: #5e6066;
+    --accent: #4a86ff;
+    --accent-hover: #6a9bff;
+    --on-accent: #ffffff;
+    --success: #10cc82;
+    --warning: #ffc827;
+    --error: #ff6e6c;
+    --on-error: #ffffff;
+    --highlight: #3a3415;
+  }
+}
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--ink-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-size: 14px;
+  line-height: 1.5;
+}
+</style>
+<style>
+main {
+  margin: 0;
+  padding: 20px;
+  max-width: 540px;
+}
+section {
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  padding: 20px;
+}
+.kind {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+h1.display {
+  margin: 0 0 16px;
+  font-family: 'Inter Display', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink-primary);
+}
+dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  row-gap: 8px;
+  column-gap: 16px;
+  margin: 0;
+}
+dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  word-break: break-word;
+}
+.pill-status {
+  display: inline-block;
+  background: var(--surface-raised);
+  border: 1px solid var(--outline);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+}
+</style>
+</head>
+<body>
+<main>
+<section>
+<p class="kind">TASK</p>
+<h1 class="display">Bare task</h1>
+<dl>
+
+</dl>
+</section>
+</main>
+</body>
+</html>"
+`;

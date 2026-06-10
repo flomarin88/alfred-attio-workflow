@@ -13,14 +13,18 @@ import type { AlfredListItem, AlfredScriptFilter } from 'fast-alfred'
 import { FastAlfred } from 'fast-alfred'
 import { AttioClient } from '@common/attio/client'
 import type { ConfigStore, Identity } from '@common/attio/identity'
+import type { Task } from '@common/attio/schemas'
 import { createAuth } from '@common/auth'
 import { createCache } from '@common/cache'
 import { persistWorkflowError } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { createNotify } from '@common/notify'
+import { writeQuicklookHtml } from '@common/quicklook'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
 import { type TaskRow, buildTaskRows } from '@common/task'
+import { renderTaskFiche } from '@common/task-fiche'
+import { buildTaskFicheInput } from '@common/task-fiche-build'
 import { Variables } from '@common/variables.enum'
 
 const HINT_FLAG = 'cmd_enter_hint_dismissed'
@@ -38,13 +42,17 @@ const FETCH_LIMIT = 50
     const query = (alfredClient.input ?? '').trim()
 
     if (!pat) {
-      emit(alfredClient, strings, {
-        identity: undefined,
-        tasks: [],
-        query,
-        patPresent: false,
-        showCmdHint: false,
-      })
+      const rows = buildTaskRows(
+        {
+          identity: undefined,
+          tasks: [],
+          query,
+          patPresent: false,
+          showCmdHint: false,
+        },
+        strings,
+      )
+      alfredClient.output(toScriptFilter(rows))
       return
     }
 
@@ -76,13 +84,20 @@ const FETCH_LIMIT = 50
     const hintDismissed = config.get(HINT_FLAG) === true
     const showCmdHint = !hintDismissed && tasksResult.data.length > 0
 
-    emit(alfredClient, strings, {
-      identity,
-      tasks: tasksResult.data,
-      query,
-      patPresent: true,
-      showCmdHint,
-    })
+    const rows = buildTaskRows(
+      {
+        identity,
+        tasks: tasksResult.data,
+        query,
+        patPresent: true,
+        showCmdHint,
+      },
+      strings,
+    )
+
+    await attachTaskFiches(rows, tasksResult.data, identity, client, alfredClient, strings)
+
+    alfredClient.output(toScriptFilter(rows))
 
     if (showCmdHint) {
       config.set(HINT_FLAG, true)
@@ -93,13 +108,40 @@ const FETCH_LIMIT = 50
 })()
 
 // ---------------------------------------------------------------------------
-// Output helpers
+// Story 3.5 — fiche generation
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildTaskRows>[0]): void {
-  const rows = buildTaskRows(inputs, strings)
-  alfredClient.output(toScriptFilter(rows))
+async function attachTaskFiches(
+  rows: TaskRow[],
+  tasks: Task[],
+  identity: Identity | undefined,
+  client: AttioClient,
+  alfredClient: FastAlfred,
+  strings: Strings,
+): Promise<void> {
+  const cacheDir = alfredClient.alfredInfo.cache()
+  if (!cacheDir) return
+  const bundleDir = process.cwd()
+  const tasksById = new Map<string, Task>()
+  for (const task of tasks) tasksById.set(task.id, task)
+
+  await Promise.all(
+    rows.map(async (row) => {
+      if (!row.uid.startsWith('task-')) return
+      const id = row.uid.slice('task-'.length)
+      const task = tasksById.get(id)
+      if (!task) return
+      const input = await buildTaskFicheInput(task, identity, client)
+      const html = renderTaskFiche(input, { bundleDir, strings })
+      const written = await writeQuicklookHtml(cacheDir, `task-${id}.html`, html)
+      if (written) row.quicklookurl = `file://${written}`
+    }),
+  )
 }
+
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
 function handleError(
   alfredClient: FastAlfred,
@@ -136,6 +178,7 @@ function toScriptFilter(rows: TaskRow[]): AlfredScriptFilter {
       icon: spec.icon,
       valid: spec.valid,
       arg: spec.arg,
+      ...(spec.quicklookurl !== undefined ? { quicklookurl: spec.quicklookurl } : {}),
       ...(spec.mods !== undefined ? { mods: spec.mods } : {}),
     }),
   ) as unknown as AlfredListItem[]

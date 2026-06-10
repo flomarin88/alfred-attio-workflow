@@ -58,6 +58,7 @@
   "fiche.kind.person": "Person",
   "fiche.kind.company": "Company",
   "fiche.kind.deal": "Deal",
+  "fiche.kind.task": "Task",
   "fiche.label.jobTitle": "Job title",
   "fiche.label.email": "Email",
   "fiche.label.phone": "Phone",
@@ -71,5 +72,12 @@
   "fiche.label.stage": "Stage",
   "fiche.label.value": "Value",
   "fiche.label.closeDate": "Close date",
-  "fiche.label.primaryPerson": "Primary contact"
+  "fiche.label.primaryPerson": "Primary contact",
+  "fiche.label.deadline": "Deadline",
+  "fiche.label.assignee": "Assignee",
+  "fiche.label.linkedPerson": "Linked person",
+  "fiche.label.linkedDeal": "Linked deal",
+  "fiche.label.linkedCompany": "Linked company",
+  "fiche.value.assignee.me": "Me",
+  "fiche.value.assignee.other": "Other workspace member"
 }

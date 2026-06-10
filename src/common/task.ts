@@ -61,6 +61,8 @@ export interface TaskRow {
   valid: boolean
   arg: string
   mods?: { cmd?: TaskMod }
+  /** Set by the keyword script after the Quick Look fiche is written. */
+  quicklookurl?: string
 }
 
 const DEFAULT_CAP = 9

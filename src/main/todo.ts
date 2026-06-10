@@ -21,8 +21,11 @@ import { createCache } from '@common/cache'
 import { persistWorkflowError } from '@common/diag-state'
 import { type WorkflowError, errorParams, errorRow } from '@common/error'
 import { createNotify } from '@common/notify'
+import { writeQuicklookHtml } from '@common/quicklook'
 import { createIconRegistry, createRowBuilder } from '@common/script-filter'
 import { type Strings, createStrings } from '@common/strings'
+import { renderTaskFiche } from '@common/task-fiche'
+import { buildTaskFicheInput } from '@common/task-fiche-build'
 import { type TodoRow, buildTodoRows } from '@common/todo'
 import { Variables } from '@common/variables.enum'
 
@@ -39,12 +42,16 @@ import { Variables } from '@common/variables.enum'
     // No PAT → setup-prompt row (FR-022 / FR-023). The builder owns the
     // wording; we just hand it an empty inputs object.
     if (!pat) {
-      emit(alfredClient, strings, {
-        identity: undefined,
-        tasks: [],
-        linkedRecordNames: new Map(),
-        patPresent: false,
-      })
+      const rows = buildTodoRows(
+        {
+          identity: undefined,
+          tasks: [],
+          linkedRecordNames: new Map(),
+          patPresent: false,
+        },
+        strings,
+      )
+      alfredClient.output(toScriptFilter(rows))
       return
     }
 
@@ -99,12 +106,19 @@ import { Variables } from '@common/variables.enum'
 
     const linkedRecordNames = await resolveLinkedNames(client, normalizedTasks)
 
-    emit(alfredClient, strings, {
-      identity,
-      tasks: normalizedTasks,
-      linkedRecordNames,
-      patPresent: true,
-    })
+    const rows = buildTodoRows(
+      {
+        identity,
+        tasks: normalizedTasks,
+        linkedRecordNames,
+        patPresent: true,
+      },
+      strings,
+    )
+
+    await attachTaskFiches(rows, normalizedTasks, identity, client, alfredClient, strings)
+
+    alfredClient.output(toScriptFilter(rows))
   } catch (error) {
     alfredClient.error(error as Error)
   }
@@ -162,13 +176,40 @@ function extractDisplayName(slug: string, record: RecordItem): string | undefine
 }
 
 // ---------------------------------------------------------------------------
-// Output helpers
+// Story 3.5 — fiche generation
 // ---------------------------------------------------------------------------
 
-function emit(alfredClient: FastAlfred, strings: Strings, inputs: Parameters<typeof buildTodoRows>[0]): void {
-  const rows = buildTodoRows(inputs, strings)
-  alfredClient.output(toScriptFilter(rows))
+async function attachTaskFiches(
+  rows: TodoRow[],
+  tasks: Task[],
+  identity: Identity | undefined,
+  client: AttioClient,
+  alfredClient: FastAlfred,
+  strings: Strings,
+): Promise<void> {
+  const cacheDir = alfredClient.alfredInfo.cache()
+  if (!cacheDir) return
+  const bundleDir = process.cwd()
+  const tasksById = new Map<string, Task>()
+  for (const task of tasks) tasksById.set(task.id, task)
+
+  await Promise.all(
+    rows.map(async (row) => {
+      if (!row.uid.startsWith('task-')) return
+      const id = row.uid.slice('task-'.length)
+      const task = tasksById.get(id)
+      if (!task) return
+      const input = await buildTaskFicheInput(task, identity, client)
+      const html = renderTaskFiche(input, { bundleDir, strings })
+      const written = await writeQuicklookHtml(cacheDir, `task-${id}.html`, html)
+      if (written) row.quicklookurl = `file://${written}`
+    }),
+  )
 }
+
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
 function handleError(
   alfredClient: FastAlfred,

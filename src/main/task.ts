@@ -27,7 +27,6 @@ import { renderTaskFiche } from '@common/task-fiche'
 import { buildTaskFicheInput } from '@common/task-fiche-build'
 import { Variables } from '@common/variables.enum'
 
-const HINT_FLAG = 'cmd_enter_hint_dismissed'
 const FETCH_LIMIT = 50
 
 ;(async () => {
@@ -48,7 +47,6 @@ const FETCH_LIMIT = 50
           tasks: [],
           query,
           patPresent: false,
-          showCmdHint: false,
         },
         strings,
       )
@@ -81,16 +79,12 @@ const FETCH_LIMIT = 50
       return
     }
 
-    const hintDismissed = config.get(HINT_FLAG) === true
-    const showCmdHint = !hintDismissed && tasksResult.data.length > 0
-
     const rows = buildTaskRows(
       {
         identity,
         tasks: tasksResult.data,
         query,
         patPresent: true,
-        showCmdHint,
       },
       strings,
     )
@@ -98,10 +92,6 @@ const FETCH_LIMIT = 50
     await attachTaskFiches(rows, tasksResult.data, identity, client, alfredClient, strings)
 
     alfredClient.output(toScriptFilter(rows))
-
-    if (showCmdHint) {
-      config.set(HINT_FLAG, true)
-    }
   } catch (error) {
     alfredClient.error(error as Error)
   }

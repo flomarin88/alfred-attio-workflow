@@ -285,6 +285,25 @@ export class AttioClient {
     return parsed
   }
 
+  /**
+   * Marks a task as updated — Story 4.1 / FR-047. Body MUST be a partial
+   * task patch (V1 uses `{ is_completed: true }` for the mark-complete
+   * flow). On success the cache entry for this task AND every cached
+   * list page that contained it are invalidated so the next `listTasks`
+   * call refetches.
+   */
+  async patchTask(id: string, body: Record<string, unknown>): Promise<Result<Task, WorkflowError>> {
+    const raw = await this.request('PATCH', `/v2/tasks/${encodeURIComponent(id)}`, body)
+    if (!raw.ok) return raw
+    // PATCH /v2/tasks/{id} returns `{ data: Task }`.
+    const envelope = raw.data as { data?: unknown } | null
+    const parsed = parseWith(TaskSchema, envelope?.data)
+    if (parsed.ok) {
+      this.cache.invalidateRecord('tasks', id)
+    }
+    return parsed
+  }
+
   async queryRecords(slug: string, body: unknown): Promise<Result<RecordItem[], WorkflowError>> {
     const queryHash = hashFilter({ slug, body })
     const cached = this.cache.getList<RecordItem>(slug, queryHash)

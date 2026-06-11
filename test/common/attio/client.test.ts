@@ -610,6 +610,95 @@ describe('AttioClient.queryRecords', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Story 4.1 — patchTask
+// ---------------------------------------------------------------------------
+
+const PATCHED_TASK_WIRE = {
+  data: {
+    ...TASKS_WIRE.data[0],
+    is_completed: true,
+  },
+}
+
+describe('AttioClient.patchTask — Story 4.1', () => {
+  it('fires PATCH /v2/tasks/{id} with the body and returns the parsed task on success', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, PATCHED_TASK_WIRE))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.patchTask('task_1', { is_completed: true })
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('unreachable')
+    expect(result.data.id).toBe('task_1')
+    expect(result.data.isCompleted).toBe(true)
+    expect(result.data.content).toBe('Follow up with Acme')
+
+    const [url, init] = fetchImpl.mock.calls[0]
+    expect(url).toBe('https://api.attio.test/v2/tasks/task_1')
+    expect((init as RequestInit).method).toBe('PATCH')
+    expect((init as RequestInit).body).toBe(JSON.stringify({ is_completed: true }))
+  })
+
+  it('URL-encodes the task ID', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, PATCHED_TASK_WIRE))
+    const { client } = makeClient(fetchImpl)
+    await client.patchTask('weird/id', { is_completed: true })
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.attio.test/v2/tasks/weird%2Fid')
+  })
+
+  it('invalidates the cached task list page that contained the task on success (FR-047)', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(200, TASKS_WIRE)) // listTasks populates list cache
+      .mockResolvedValueOnce(jsonResponse(200, PATCHED_TASK_WIRE)) // patchTask invalidates
+      .mockResolvedValueOnce(jsonResponse(200, { data: [] })) // listTasks refetches
+    const { client } = makeClient(fetchImpl)
+    await client.listTasks({ isCompleted: false })
+    await client.patchTask('task_1', { is_completed: true })
+    await client.listTasks({ isCompleted: false })
+    // 3 network calls: list + patch + re-list (the second list MUST NOT
+    // be a cache hit because patchTask invalidated the list entry).
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+  })
+
+  it('returns auth-invalid on 401', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(401, { message: 'Unauthorized' }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.patchTask('task_1', { is_completed: true })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('auth-invalid')
+  })
+
+  it('returns auth-scope-missing on 403', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(403, { message: 'Forbidden' }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.patchTask('task_1', { is_completed: true })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('auth-scope-missing')
+  })
+
+  it('returns unreachable on persistent 5xx (after one retry)', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(500, {}))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.patchTask('task_1', { is_completed: true })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('unreachable')
+    // The retry path fired exactly once → 2 fetches total.
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it('returns validation when the response shape does not parse', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { data: { id: 'not-a-task-id-object' } }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.patchTask('task_1', { is_completed: true })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('validation')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // AttioClient.getRecord — Story 1.10 addition
 // ---------------------------------------------------------------------------
 

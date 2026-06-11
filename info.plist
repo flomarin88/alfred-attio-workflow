@@ -35,7 +35,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
+				<string>4F8E2A1C-B3D5-4E76-9A8C-1E2F3D4B5A6C</string>
 				<key>modifiers</key>
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
@@ -74,6 +74,16 @@
 				<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
 				<key>modifiers</key>
 				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>4F8E2A1C-B3D5-4E76-9A8C-1E2F3D4B5A6C</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -333,6 +343,29 @@
 			<string>7E1A9B0C-E3C7-4E6A-B4F0-203476295F47</string>
 			<key>version</key>
 			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/mark-complete.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>4F8E2A1C-B3D5-4E76-9A8C-1E2F3D4B5A6C</string>
+			<key>version</key>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>

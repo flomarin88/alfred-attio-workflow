@@ -57,6 +57,12 @@ export interface TodoInputs {
   cap?: number
 }
 
+export interface TodoMod {
+  arg: string
+  valid: boolean
+  subtitle: string
+}
+
 export interface TodoRow {
   uid: string
   title: string
@@ -67,6 +73,12 @@ export interface TodoRow {
   /** Open-on-⏎ URL. Empty string for non-actionable rows. */
   arg: string
   quicklookurl?: string
+  /**
+   * Story 4.1 — ⌘⏎ mark-complete affordance. Set only on task rows;
+   * heading / offline / empty rows leave it undefined. The PATCH worker
+   * keyword (`mark-complete.ts`) consumes `mods.cmd.arg` as the task ID.
+   */
+  mods?: { cmd?: TodoMod }
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +215,14 @@ function taskRow(task: Task, workspaceSlug: string, names: Map<string, string>, 
     icon: 'task',
     valid: true,
     arg: buildTaskUrl(workspaceSlug, task.id),
+    mods: {
+      cmd: {
+        // Story 4.1 — ⌘⏎ fires the PATCH worker. Arg = task ID.
+        arg: task.id,
+        valid: true,
+        subtitle: strings.t('task.mod.markComplete.subtitle'),
+      },
+    },
   }
 }
 

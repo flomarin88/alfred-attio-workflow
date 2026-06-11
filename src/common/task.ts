@@ -39,8 +39,15 @@ export interface TaskInputs {
   query: string
   /** True when a PAT is configured. Drives the setup-prompt branch. */
   patPresent: boolean
-  /** True when `cmd_enter_hint_dismissed` is false — triggers the hint subtitle. */
-  showCmdHint: boolean
+  /**
+   * Legacy field from Story 2.4 — `cmd_enter_hint_dismissed`-driven
+   * fallback hint. Story 4.1 supersedes the fallback with a real
+   * mark-complete action, so this is no longer consulted. Kept optional
+   * to avoid breaking callers; ignored by the builder.
+   *
+   * @deprecated Story 4.1 — remove in a follow-up cleanup.
+   */
+  showCmdHint?: boolean
   /** Override `new Date()` for deterministic tests. */
   now?: Date
   /** Cap on emitted task rows. Defaults to 9 (DEFAULT_RESULT_LIMIT). */
@@ -130,12 +137,15 @@ export function buildTaskRows(inputs: TaskInputs, strings: Strings): TaskRow[] {
 
   return limited.map((task): TaskRow => {
     const webUrl = buildTaskUrl(workspaceSlug, task.id)
+    // Story 4.1: ⌘⏎ now marks the task complete via the PATCH worker
+    // wired in info.plist. The arg carries the task ID so the worker
+    // knows what to PATCH. `cmd_enter_hint_dismissed` is intentionally
+    // NOT consulted here — it tracks the deal/person fallback hint
+    // (FR-015), not this distinct mark-complete affordance.
     const cmd: TaskMod = {
-      arg: webUrl,
+      arg: task.id,
       valid: true,
-      subtitle: inputs.showCmdHint
-        ? strings.t('task.mod.fallback.hint.subtitle')
-        : strings.t('task.mod.fallback.subtitle'),
+      subtitle: strings.t('task.mod.markComplete.subtitle'),
     }
     return {
       uid: `task-${task.id}`,

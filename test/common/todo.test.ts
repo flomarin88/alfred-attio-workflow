@@ -282,6 +282,23 @@ describe('buildTodoRows — row hygiene', () => {
     const rows = buildTodoRows(defaults({ tasks: [blank] }), makeStrings())
     expect(rows[0].title).toBe('(no content)')
   })
+
+  it('task rows carry mods.cmd.arg = task ID for ⌘⏎ mark-complete (Story 4.1)', () => {
+    const task = makeTask({ id: 't_complete_me', deadlineAt: '2026-06-09T15:00:00' })
+    const rows = buildTodoRows(defaults({ tasks: [task] }), makeStrings())
+    const row = rows.find((r) => r.uid === 'task-t_complete_me')!
+    expect(row.mods?.cmd?.arg).toBe('t_complete_me')
+    expect(row.mods?.cmd?.subtitle).toBe('⌘⏎ Mark task complete')
+    expect(row.mods?.cmd?.valid).toBe(true)
+  })
+
+  it('non-task rows (offline / empty) have no mods.cmd', () => {
+    const rows = buildTodoRows(defaults({ tasks: [], offline: true }), makeStrings())
+    for (const row of rows) {
+      if (row.uid.startsWith('task-')) continue
+      expect(row.mods?.cmd).toBeUndefined()
+    }
+  })
 })
 
 // Type-checker hint: silence unused-import warning for Identity.

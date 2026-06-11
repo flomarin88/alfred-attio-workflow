@@ -142,23 +142,28 @@ describe('buildTaskRows — subtitle (FR-013: deadline · status)', () => {
   })
 })
 
-describe('buildTaskRows — ⏎ + ⌘⏎ (web_url + cmd hint)', () => {
+describe('buildTaskRows — ⏎ + ⌘⏎ (Story 4.1 mark-complete)', () => {
   const baseTask = makeTask({ id: 'rec_t', content: 'X', deadlineAt: '2026-06-09T15:00:00' })
 
-  it('arg = task URL; mods.cmd.arg = task URL (degraded)', () => {
+  it('arg = task URL (⏎ still opens in Attio)', () => {
     const rows = buildTaskRows(defaults({ tasks: [baseTask] }), makeStrings())
     expect(rows[0].arg).toBe('https://app.attio.com/studio-florian-marin/tasks?command-menu-page=task&id=rec_t')
-    expect(rows[0].mods?.cmd?.arg).toBe(rows[0].arg)
   })
 
-  it('mods.cmd.subtitle = silent fallback when showCmdHint is false', () => {
+  it('mods.cmd.arg = task ID (Story 4.1 — feeds the PATCH worker)', () => {
     const rows = buildTaskRows(defaults({ tasks: [baseTask] }), makeStrings())
-    expect(rows[0].mods?.cmd?.subtitle).toBe('Open in Attio (tasks have no external link)')
+    expect(rows[0].mods?.cmd?.arg).toBe('rec_t')
   })
 
-  it('mods.cmd.subtitle = hint when showCmdHint is true', () => {
-    const rows = buildTaskRows(defaults({ tasks: [baseTask], showCmdHint: true }), makeStrings())
-    expect(rows[0].mods?.cmd?.subtitle).toMatch(/last reminder/)
+  it('mods.cmd.subtitle = "⌘⏎ Mark task complete" (no fallback hint)', () => {
+    const rows = buildTaskRows(defaults({ tasks: [baseTask] }), makeStrings())
+    expect(rows[0].mods?.cmd?.subtitle).toBe('⌘⏎ Mark task complete')
+  })
+
+  it('ignores the deprecated showCmdHint flag (Story 4.1 supersedes Story 2.4 fallback)', () => {
+    const rowsHint = buildTaskRows(defaults({ tasks: [baseTask], showCmdHint: true }), makeStrings())
+    const rowsNoHint = buildTaskRows(defaults({ tasks: [baseTask], showCmdHint: false }), makeStrings())
+    expect(rowsHint[0].mods?.cmd?.subtitle).toBe(rowsNoHint[0].mods?.cmd?.subtitle)
   })
 })
 

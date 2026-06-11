@@ -249,6 +249,7 @@ function toScriptFilter(rows: TodoRow[]): AlfredScriptFilter {
       valid: spec.valid,
       arg: spec.arg,
       ...(spec.quicklookurl !== undefined ? { quicklookurl: spec.quicklookurl } : {}),
+      ...(spec.mods !== undefined ? { mods: spec.mods } : {}),
     }),
   ) as unknown as AlfredListItem[]
   return { items }

@@ -28,7 +28,7 @@
 import type { Identity } from './attio/identity'
 import type { Task } from './attio/schemas'
 import { ATTIO_APP_BASE_URL, DEFAULT_RESULT_LIMIT, type IconKey, README_SETUP_URL } from './constants'
-import { buildNoteAddArg } from './notes'
+import { buildNoteAddArg, buildNoteAddMultiArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -81,11 +81,12 @@ export interface TodoRow {
   arg: string
   quicklookurl?: string
   /**
-   * Story 4.1 — ⌘⏎ mark-complete affordance. Set only on task rows;
-   * heading / offline / empty rows leave it undefined. The PATCH worker
-   * keyword (`mark-complete.ts`) consumes `mods.cmd.arg` as the task ID.
+   * Story 4.1 — ⌘⏎ mark-complete affordance.
+   * Story 4.2 — ⌥⏎ note from query (omitted when query is empty).
+   * Story 4.3 — ⇧⌥⏎ multi-line note (always set on task rows).
+   * Heading / offline / empty rows leave this undefined.
    */
-  mods?: { cmd?: TodoMod }
+  mods?: { cmd?: TodoMod; alt?: TodoMod; 'alt+shift'?: TodoMod }
 }
 
 // ---------------------------------------------------------------------------
@@ -231,6 +232,11 @@ function taskRow(
   const alt: TodoMod | undefined = altArg
     ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
     : undefined
+  const altShift: TodoMod = {
+    arg: buildNoteAddMultiArg({ slug: 'tasks', id: task.id, recordName: task.content || task.id }),
+    valid: true,
+    subtitle: strings.t('note.add.multi.subtitle'),
+  }
   return {
     uid: `task-${task.id}`,
     title: task.content || '(no content)',
@@ -246,6 +252,7 @@ function taskRow(
         subtitle: strings.t('task.mod.markComplete.subtitle'),
       },
       ...(alt !== undefined ? { alt } : {}),
+      'alt+shift': altShift,
     },
   }
 }

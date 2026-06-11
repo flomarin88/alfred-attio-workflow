@@ -19,7 +19,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
-import { buildNoteAddArg } from './notes'
+import { buildNoteAddArg, buildNoteAddMultiArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ export interface DealRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: DealMod; alt?: DealMod }
+  mods?: { cmd?: DealMod; alt?: DealMod; 'alt+shift'?: DealMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -236,6 +236,11 @@ export function buildDealRows(inputs: DealInputs, strings: Strings): DealRow[] {
     const alt: DealMod | undefined = altArg
       ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
       : undefined
+    const altShift: DealMod = {
+      arg: buildNoteAddMultiArg({ slug: 'deals', id: record.id, recordName: name }),
+      valid: true,
+      subtitle: strings.t('note.add.multi.subtitle'),
+    }
 
     return {
       uid: `deal-${record.id}`,
@@ -244,7 +249,7 @@ export function buildDealRows(inputs: DealInputs, strings: Strings): DealRow[] {
       icon: 'deal',
       valid: true,
       arg: webUrl,
-      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}), 'alt+shift': altShift },
     }
   })
 }

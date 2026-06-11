@@ -18,7 +18,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
-import { buildNoteAddArg } from './notes'
+import { buildNoteAddArg, buildNoteAddMultiArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -51,7 +51,7 @@ export interface CompanyRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: CompanyMod; alt?: CompanyMod }
+  mods?: { cmd?: CompanyMod; alt?: CompanyMod; 'alt+shift'?: CompanyMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -227,6 +227,11 @@ export function buildCompanyRows(inputs: CompanyInputs, strings: Strings): Compa
     const alt: CompanyMod | undefined = altArg
       ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
       : undefined
+    const altShift: CompanyMod = {
+      arg: buildNoteAddMultiArg({ slug: 'companies', id: record.id, recordName: name }),
+      valid: true,
+      subtitle: strings.t('note.add.multi.subtitle'),
+    }
 
     return {
       uid: `company-${record.id}`,
@@ -235,7 +240,7 @@ export function buildCompanyRows(inputs: CompanyInputs, strings: Strings): Compa
       icon: 'company',
       valid: true,
       arg: webUrl,
-      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}), 'alt+shift': altShift },
     }
   })
 }

@@ -85,6 +85,10 @@ export default tseslint.config(
       '.husky/_/**',
       'commitlint.config.cjs',
       'reset.d.ts',
+      // JXA scripts use the `$` and `ObjC` globals injected by
+      // `osascript -l JavaScript`, not Node.js. They aren't TypeScript
+      // sources and aren't bundled by esbuild — they're shipped raw.
+      'assets/scripts/**',
     ],
   },
 

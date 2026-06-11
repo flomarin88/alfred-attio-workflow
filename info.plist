@@ -53,6 +53,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
+				<key>modifiers</key>
+				<integer>655360</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>B4760792-AF43-4BAD-8098-E973611BC9E5</key>
 		<array>
@@ -81,6 +91,16 @@
 				<string>5A9F3B2D-C4E6-4F8A-9B0C-2D3E4F5A6B7C</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
+				<key>modifiers</key>
+				<integer>655360</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -119,6 +139,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
+				<key>modifiers</key>
+				<integer>655360</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>D996D95C-AE52-48C5-8AA2-573817584A90</key>
 		<array>
@@ -152,6 +182,16 @@
 				<key>vitoclose</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
+				<key>modifiers</key>
+				<integer>655360</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 		</array>
 		<key>E686B693-BF28-4E96-95F7-7912EBF12455</key>
 		<array>
@@ -180,6 +220,16 @@
 				<string>5A9F3B2D-C4E6-4F8A-9B0C-2D3E4F5A6B7C</string>
 				<key>modifiers</key>
 				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
+				<key>modifiers</key>
+				<integer>655360</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
@@ -437,6 +487,29 @@
 			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
 			<string>5A9F3B2D-C4E6-4F8A-9B0C-2D3E4F5A6B7C</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>./esbuild/assets/run-node.sh esbuild/note-add-multi.js "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>6B0A4C3E-D5F7-4A9B-AC1D-3E4F5A6B7C8D</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>

@@ -97,3 +97,22 @@ export function buildNoteAddArg(input: NoteAddArg): string | undefined {
   }
   return JSON.stringify(payload)
 }
+
+/**
+ * Returns the JSON-encoded payload for `mods["alt+shift"].arg` —
+ * Story 4.3 multi-line variant. Unlike `buildNoteAddArg`, this DOES NOT
+ * require non-empty content because the worker (`note-add-multi.ts`)
+ * collects the body interactively via an NSAlert prompt; any text the
+ * user typed after the keyword is irrelevant.
+ *
+ * The row builder should always include this on record rows so ⇧⌥⏎
+ * works regardless of the current Alfred query.
+ */
+export function buildNoteAddMultiArg(input: Omit<NoteAddArg, 'content'>): string {
+  const payload: Pick<NoteAddArg, 'slug' | 'id'> & Partial<NoteAddArg> = {
+    slug: input.slug,
+    id: input.id,
+    ...(input.recordName !== undefined && input.recordName.length > 0 ? { recordName: input.recordName } : {}),
+  }
+  return JSON.stringify(payload)
+}

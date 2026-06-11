@@ -303,6 +303,40 @@ describe('buildPersonRows — mods.alt note-add (Story 4.2)', () => {
   })
 })
 
+describe('buildPersonRows — mods[alt+shift] multi-line note (Story 4.3)', () => {
+  const baseRecord = makeRecord({
+    id: 'rec_jane',
+    webUrl: 'https://app.attio.com/x/people/rec_jane',
+    values: personValues({ name: 'Jane Doe' }),
+  })
+
+  it('is ALWAYS present on person rows (regardless of query)', () => {
+    const withQuery = buildPersonRows(defaults({ records: [baseRecord], query: 'florian' }), makeStrings())
+    const withoutQuery = buildPersonRows(defaults({ records: [baseRecord], query: '' }), makeStrings())
+    expect(withQuery[0].mods?.['alt+shift']).toBeDefined()
+    expect(withoutQuery[0].mods?.['alt+shift']).toBeDefined()
+  })
+
+  it('arg = JSON payload with slug + id + recordName (no content)', () => {
+    const rows = buildPersonRows(defaults({ records: [baseRecord], query: 'x' }), makeStrings())
+    const payload = JSON.parse(rows[0].mods!['alt+shift']!.arg) as Record<string, unknown>
+    expect(payload).toEqual({ slug: 'people', id: 'rec_jane', recordName: 'Jane Doe' })
+    expect(payload.content).toBeUndefined()
+  })
+
+  it('subtitle = "⇧⌥⏎ Write multi-line note"', () => {
+    const rows = buildPersonRows(defaults({ records: [baseRecord], query: 'x' }), makeStrings())
+    expect(rows[0].mods!['alt+shift']!.subtitle).toBe('⇧⌥⏎ Write multi-line note')
+  })
+
+  it('does NOT set mods[alt+shift] on setup or empty rows', () => {
+    const setupRows = buildPersonRows(defaults({ patPresent: false, query: 'x' }), makeStrings())
+    expect(setupRows[0].mods?.['alt+shift']).toBeUndefined()
+    const emptyRows = buildPersonRows(defaults({ records: [], query: 'jane' }), makeStrings())
+    expect(emptyRows[0].mods?.['alt+shift']).toBeUndefined()
+  })
+})
+
 describe('hasMissingLinkedIn', () => {
   it('returns true when at least one record lacks a LinkedIn URL', () => {
     const a = makeRecord({ values: personValues({ name: 'A', linkedinUrl: 'https://l/a' }) })

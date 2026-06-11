@@ -19,7 +19,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
-import { buildNoteAddArg } from './notes'
+import { buildNoteAddArg, buildNoteAddMultiArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ export interface PersonRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: PersonMod; alt?: PersonMod }
+  mods?: { cmd?: PersonMod; alt?: PersonMod; 'alt+shift'?: PersonMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -217,6 +217,13 @@ export function buildPersonRows(inputs: PersonInputs, strings: Strings): PersonR
     const alt: PersonMod | undefined = altArg
       ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
       : undefined
+    // Story 4.3 — ⇧⌥⏎ multi-line is always available on record rows;
+    // the query is irrelevant because the worker prompts via NSAlert.
+    const altShift: PersonMod = {
+      arg: buildNoteAddMultiArg({ slug: 'people', id: record.id, recordName: name }),
+      valid: true,
+      subtitle: strings.t('note.add.multi.subtitle'),
+    }
 
     return {
       uid: `person-${record.id}`,
@@ -225,7 +232,7 @@ export function buildPersonRows(inputs: PersonInputs, strings: Strings): PersonR
       icon: 'person',
       valid: true,
       arg: webUrl,
-      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}), 'alt+shift': altShift },
     }
   })
 }

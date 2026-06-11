@@ -61,6 +61,8 @@
   "offline.preflight-block.title": "Offline — change not applied",
   "offline.preflight-block.subtitle": "Reconnect and try again",
   "note.add.subtitle": "⌥⏎ Add note from query",
+  "note.add.multi.subtitle": "⇧⌥⏎ Write multi-line note",
+  "notes.multiline-prompt": "Add a note linked to {record_name}",
   "success.note-added.title": "Note added",
   "success.note-added.subtitle": "Linked to {record_name}",
   "fiche.kind.person": "Person",

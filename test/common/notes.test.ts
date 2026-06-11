@@ -15,6 +15,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildNoteAddArg,
+  buildNoteAddMultiArg,
   deriveMultiLineTitle,
   deriveSingleLineTitle,
   sanitizeMultiLineContent,
@@ -97,13 +98,17 @@ describe('deriveSingleLineTitle (Story 4.2 / FR-016)', () => {
   })
 })
 
-describe('deriveMultiLineTitle (Story 4.3 helper)', () => {
-  it('returns the first non-empty line', () => {
-    expect(deriveMultiLineTitle('first\nsecond')).toBe('first')
+describe('deriveMultiLineTitle (Story 4.3 — title-from-first-line)', () => {
+  it('AC shape — single line, no newlines, returns the line', () => {
+    expect(deriveMultiLineTitle('Single line note body')).toBe('Single line note body')
   })
 
-  it('skips leading blank lines', () => {
-    expect(deriveMultiLineTitle('\n\n  first\nsecond')).toBe('  first')
+  it('AC shape — multi-line input returns the first non-empty line', () => {
+    expect(deriveMultiLineTitle('first line\nsecond line\nthird')).toBe('first line')
+  })
+
+  it('AC shape — leading blank lines skipped', () => {
+    expect(deriveMultiLineTitle('\n\n  first content line\nsecond')).toBe('  first content line')
   })
 
   it('truncates at 80 chars', () => {
@@ -113,6 +118,33 @@ describe('deriveMultiLineTitle (Story 4.3 helper)', () => {
 
   it('returns empty string when every line is blank', () => {
     expect(deriveMultiLineTitle('\n\n\n')).toBe('')
+  })
+
+  it('handles a line whose length is exactly 80 (no truncation)', () => {
+    const line = 'b'.repeat(80)
+    expect(deriveMultiLineTitle(`${line}\nfollow-up`)).toBe(line)
+  })
+})
+
+describe('buildNoteAddMultiArg (Story 4.3)', () => {
+  it('returns JSON with slug + id + recordName (no content field)', () => {
+    const arg = buildNoteAddMultiArg({ slug: 'people', id: 'rec_1', recordName: 'Jane Doe' })
+    expect(JSON.parse(arg)).toEqual({ slug: 'people', id: 'rec_1', recordName: 'Jane Doe' })
+  })
+
+  it('omits recordName when undefined', () => {
+    const arg = buildNoteAddMultiArg({ slug: 'companies', id: 'rec_x' })
+    expect(JSON.parse(arg)).toEqual({ slug: 'companies', id: 'rec_x' })
+  })
+
+  it('omits recordName when empty string', () => {
+    const arg = buildNoteAddMultiArg({ slug: 'deals', id: 'rec_y', recordName: '' })
+    expect(JSON.parse(arg)).toEqual({ slug: 'deals', id: 'rec_y' })
+  })
+
+  it('ALWAYS returns a payload (no query / content gate — worker prompts)', () => {
+    // Unlike buildNoteAddArg, this helper never returns undefined.
+    expect(buildNoteAddMultiArg({ slug: 'tasks', id: 't1' })).toBeTypeOf('string')
   })
 })
 

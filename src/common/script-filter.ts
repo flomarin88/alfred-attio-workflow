@@ -30,6 +30,20 @@ export interface AlfredMod {
  * Aligned with fast-alfred's `AlfredListItem` but kept here so the
  * common layer stays runtime-agnostic and testable.
  */
+/**
+ * Alfred 5 supports combo-modifier keys (e.g. `alt+shift`, `cmd+ctrl`)
+ * in the script-filter `mods` map. The single-key entries below are
+ * canonical; arbitrary combo keys are typed via the catch-all index
+ * signature.
+ */
+export interface AlfredMods {
+  cmd?: AlfredMod
+  alt?: AlfredMod
+  shift?: AlfredMod
+  ctrl?: AlfredMod
+  [combo: string]: AlfredMod | undefined
+}
+
 export interface AlfredItem {
   uid?: string
   title: string
@@ -38,11 +52,7 @@ export interface AlfredItem {
   valid: boolean
   icon: { path: string }
   quicklookurl?: string
-  mods?: {
-    cmd?: AlfredMod
-    alt?: AlfredMod
-    shift?: AlfredMod
-  }
+  mods?: AlfredMods
 }
 
 export interface RowOptions {
@@ -54,11 +64,7 @@ export interface RowOptions {
   quicklookurl?: string
   /** Defaults to `true`. Errors and informational rows pass `false`. */
   valid?: boolean
-  mods?: {
-    cmd?: AlfredMod
-    alt?: AlfredMod
-    shift?: AlfredMod
-  }
+  mods?: AlfredMods
 }
 
 export interface IconRegistry {

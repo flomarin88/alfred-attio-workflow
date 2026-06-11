@@ -24,7 +24,7 @@ import type { Identity } from './attio/identity'
 import type { Task } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { formatDeadlineSubtitle } from './format'
-import { buildNoteAddArg } from './notes'
+import { buildNoteAddArg, buildNoteAddMultiArg } from './notes'
 import type { Strings } from './strings'
 import { buildTaskUrl } from './todo'
 
@@ -68,7 +68,7 @@ export interface TaskRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: TaskMod; alt?: TaskMod }
+  mods?: { cmd?: TaskMod; alt?: TaskMod; 'alt+shift'?: TaskMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -157,6 +157,11 @@ export function buildTaskRows(inputs: TaskInputs, strings: Strings): TaskRow[] {
     const alt: TaskMod | undefined = altArg
       ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
       : undefined
+    const altShift: TaskMod = {
+      arg: buildNoteAddMultiArg({ slug: 'tasks', id: task.id, recordName: task.content || task.id }),
+      valid: true,
+      subtitle: strings.t('note.add.multi.subtitle'),
+    }
     return {
       uid: `task-${task.id}`,
       title: task.content || '(no content)',
@@ -164,7 +169,7 @@ export function buildTaskRows(inputs: TaskInputs, strings: Strings): TaskRow[] {
       icon: 'task',
       valid: true,
       arg: webUrl,
-      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}), 'alt+shift': altShift },
     }
   })
 }

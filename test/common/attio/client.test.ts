@@ -699,6 +699,109 @@ describe('AttioClient.patchTask — Story 4.1', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Story 4.2 — createNote
+// ---------------------------------------------------------------------------
+
+describe('AttioClient.createNote — Story 4.2', () => {
+  it('POSTs to /v2/notes with the canonical 5-field body shape', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { data: { id: 'note_1' } }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.createNote({
+      parentObject: 'people',
+      parentRecordId: 'rec_jane',
+      title: 'Follow up',
+      content: 'Follow up with Jane',
+      format: 'plaintext',
+    })
+    expect(result.ok).toBe(true)
+
+    const [url, init] = fetchImpl.mock.calls[0]
+    expect(url).toBe('https://api.attio.test/v2/notes')
+    expect((init as RequestInit).method).toBe('POST')
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+      parent_object: 'people',
+      parent_record_id: 'rec_jane',
+      title: 'Follow up',
+      content: 'Follow up with Jane',
+      format: 'plaintext',
+    })
+  })
+
+  it('defaults format to plaintext when omitted', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { data: {} }))
+    const { client } = makeClient(fetchImpl)
+    await client.createNote({
+      parentObject: 'companies',
+      parentRecordId: 'rec_acme',
+      title: 't',
+      content: 'c',
+    })
+    const body = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string) as Record<string, unknown>
+    expect(body.format).toBe('plaintext')
+  })
+
+  it('invalidates the parent record cache on success (FR-047)', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: { record_id: 'rec_jane' }, web_url: 'x' } }))
+      .mockResolvedValueOnce(jsonResponse(200, { data: {} }))
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: { record_id: 'rec_jane' }, web_url: 'x' } }))
+    const { client } = makeClient(fetchImpl)
+    await client.getRecord('people', 'rec_jane')
+    await client.createNote({
+      parentObject: 'people',
+      parentRecordId: 'rec_jane',
+      title: 't',
+      content: 'c',
+    })
+    await client.getRecord('people', 'rec_jane')
+    // 3 fetches: get + createNote + re-get (cache invalidated).
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+  })
+
+  it('returns auth-invalid on 401', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(401, { message: 'Unauthorized' }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.createNote({ parentObject: 'people', parentRecordId: 'x', title: 't', content: 'c' })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('auth-invalid')
+  })
+
+  it('returns auth-scope-missing on 403', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(403, { message: 'Forbidden' }))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.createNote({ parentObject: 'people', parentRecordId: 'x', title: 't', content: 'c' })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('auth-scope-missing')
+  })
+
+  it('returns unreachable on persistent 5xx', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(500, {}))
+    const { client } = makeClient(fetchImpl)
+    const result = await client.createNote({ parentObject: 'people', parentRecordId: 'x', title: 't', content: 'c' })
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('unreachable')
+    expect(result.error.kind).toBe('unreachable')
+  })
+
+  it('does NOT invalidate the cache on failure', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: { record_id: 'rec_x' }, web_url: 'x' } }))
+      .mockResolvedValueOnce(jsonResponse(401, { message: 'Unauthorized' }))
+      .mockResolvedValueOnce(jsonResponse(200, { data: { id: { record_id: 'rec_x' }, web_url: 'x' } }))
+    const { client } = makeClient(fetchImpl)
+    await client.getRecord('people', 'rec_x')
+    await client.createNote({ parentObject: 'people', parentRecordId: 'rec_x', title: 't', content: 'c' })
+    await client.getRecord('people', 'rec_x')
+    // 2 fetches only: get + failed createNote. The second get is a cache hit.
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // AttioClient.getRecord — Story 1.10 addition
 // ---------------------------------------------------------------------------
 

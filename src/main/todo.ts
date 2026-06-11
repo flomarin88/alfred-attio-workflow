@@ -105,6 +105,7 @@ import { Variables } from '@common/variables.enum'
     }))
 
     const linkedRecordNames = await resolveLinkedNames(client, normalizedTasks)
+    const query = (alfredClient.input ?? '').trim()
 
     const rows = buildTodoRows(
       {
@@ -112,6 +113,7 @@ import { Variables } from '@common/variables.enum'
         tasks: normalizedTasks,
         linkedRecordNames,
         patPresent: true,
+        query,
       },
       strings,
     )

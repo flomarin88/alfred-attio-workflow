@@ -286,6 +286,36 @@ export class AttioClient {
   }
 
   /**
+   * Creates a Note linked to a parent record — Story 4.2 / FR-016 +
+   * FR-047. On success invalidates the parent record's cache entry so
+   * the next Quick Look reflects the new note (note counts, recent
+   * notes list — once implemented).
+   *
+   * The Attio API returns the created note in `{ data: ... }`; for V1
+   * we don't parse it (callers don't need the note ID), but we do
+   * confirm a non-error response.
+   */
+  async createNote(input: {
+    parentObject: string
+    parentRecordId: string
+    title: string
+    content: string
+    format?: 'plaintext' | 'markdown'
+  }): Promise<Result<undefined, WorkflowError>> {
+    const body = {
+      parent_object: input.parentObject,
+      parent_record_id: input.parentRecordId,
+      title: input.title,
+      content: input.content,
+      format: input.format ?? 'plaintext',
+    }
+    const raw = await this.request('POST', '/v2/notes', body)
+    if (!raw.ok) return raw
+    this.cache.invalidateRecord(input.parentObject, input.parentRecordId)
+    return ok(undefined)
+  }
+
+  /**
    * Marks a task as updated — Story 4.1 / FR-047. Body MUST be a partial
    * task patch (V1 uses `{ is_completed: true }` for the mark-complete
    * flow). On success the cache entry for this task AND every cached

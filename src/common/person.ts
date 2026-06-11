@@ -19,6 +19,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
+import { buildNoteAddArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -67,7 +68,7 @@ export interface PersonRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: PersonMod }
+  mods?: { cmd?: PersonMod; alt?: PersonMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -212,6 +213,11 @@ export function buildPersonRows(inputs: PersonInputs, strings: Strings): PersonR
             : strings.t('person.mod.fallback.subtitle'),
         }
 
+    const altArg = buildNoteAddArg({ slug: 'people', id: record.id, content: inputs.query, recordName: name })
+    const alt: PersonMod | undefined = altArg
+      ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
+      : undefined
+
     return {
       uid: `person-${record.id}`,
       title: name,
@@ -219,7 +225,7 @@ export function buildPersonRows(inputs: PersonInputs, strings: Strings): PersonR
       icon: 'person',
       valid: true,
       arg: webUrl,
-      mods: { cmd },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
     }
   })
 }

@@ -18,6 +18,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
+import { buildNoteAddArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ export interface CompanyRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: CompanyMod }
+  mods?: { cmd?: CompanyMod; alt?: CompanyMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -222,6 +223,11 @@ export function buildCompanyRows(inputs: CompanyInputs, strings: Strings): Compa
           subtitle: strings.t('company.mod.fallback.subtitle'),
         }
 
+    const altArg = buildNoteAddArg({ slug: 'companies', id: record.id, content: inputs.query, recordName: name })
+    const alt: CompanyMod | undefined = altArg
+      ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
+      : undefined
+
     return {
       uid: `company-${record.id}`,
       title: name,
@@ -229,7 +235,7 @@ export function buildCompanyRows(inputs: CompanyInputs, strings: Strings): Compa
       icon: 'company',
       valid: true,
       arg: webUrl,
-      mods: { cmd },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
     }
   })
 }

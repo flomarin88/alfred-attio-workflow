@@ -265,6 +265,44 @@ describe('buildPersonRows — lifecycle subtitle suffix (Story 2.5 / FR-033)', (
   })
 })
 
+describe('buildPersonRows — mods.alt note-add (Story 4.2)', () => {
+  const baseRecord = makeRecord({
+    id: 'rec_jane',
+    webUrl: 'https://app.attio.com/x/people/rec_jane',
+    values: personValues({ name: 'Jane Doe' }),
+  })
+
+  it('sets mods.alt.arg = JSON payload with slug=people, id, content=query, recordName', () => {
+    const rows = buildPersonRows(defaults({ records: [baseRecord], query: 'florian followed up' }), makeStrings())
+    expect(rows[0].mods?.alt).toBeDefined()
+    const payload = JSON.parse(rows[0].mods!.alt!.arg) as Record<string, unknown>
+    expect(payload).toEqual({
+      slug: 'people',
+      id: 'rec_jane',
+      content: 'florian followed up',
+      recordName: 'Jane Doe',
+    })
+    expect(rows[0].mods!.alt!.subtitle).toBe('⌥⏎ Add note from query')
+  })
+
+  it('omits mods.alt entirely when query is empty', () => {
+    const rows = buildPersonRows(defaults({ records: [baseRecord], query: '' }), makeStrings())
+    expect(rows[0].mods?.alt).toBeUndefined()
+  })
+
+  it('omits mods.alt when query is whitespace-only', () => {
+    const rows = buildPersonRows(defaults({ records: [baseRecord], query: '   ' }), makeStrings())
+    expect(rows[0].mods?.alt).toBeUndefined()
+  })
+
+  it('does NOT set mods.alt on setup or empty rows', () => {
+    const setupRows = buildPersonRows(defaults({ patPresent: false, query: 'something' }), makeStrings())
+    expect(setupRows[0].mods?.alt).toBeUndefined()
+    const emptyRows = buildPersonRows(defaults({ records: [], query: 'jane' }), makeStrings())
+    expect(emptyRows[0].mods?.alt).toBeUndefined()
+  })
+})
+
 describe('hasMissingLinkedIn', () => {
   it('returns true when at least one record lacks a LinkedIn URL', () => {
     const a = makeRecord({ values: personValues({ name: 'A', linkedinUrl: 'https://l/a' }) })

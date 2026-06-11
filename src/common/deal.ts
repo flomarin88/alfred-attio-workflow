@@ -19,6 +19,7 @@ import type { Identity } from './attio/identity'
 import type { RecordItem } from './attio/schemas'
 import { type IconKey, README_SETUP_URL } from './constants'
 import { extractLifecycleValue } from './lifecycle'
+import { buildNoteAddArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ export interface DealRow {
   icon: IconKey
   valid: boolean
   arg: string
-  mods?: { cmd?: DealMod }
+  mods?: { cmd?: DealMod; alt?: DealMod }
   /** Set by the keyword script after the Quick Look fiche is written. */
   quicklookurl?: string
 }
@@ -231,6 +232,11 @@ export function buildDealRows(inputs: DealInputs, strings: Strings): DealRow[] {
         : strings.t('deal.mod.fallback.subtitle'),
     }
 
+    const altArg = buildNoteAddArg({ slug: 'deals', id: record.id, content: inputs.query, recordName: name })
+    const alt: DealMod | undefined = altArg
+      ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
+      : undefined
+
     return {
       uid: `deal-${record.id}`,
       title: name,
@@ -238,7 +244,7 @@ export function buildDealRows(inputs: DealInputs, strings: Strings): DealRow[] {
       icon: 'deal',
       valid: true,
       arg: webUrl,
-      mods: { cmd },
+      mods: { cmd, ...(alt !== undefined ? { alt } : {}) },
     }
   })
 }

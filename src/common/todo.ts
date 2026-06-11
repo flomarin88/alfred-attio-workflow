@@ -28,6 +28,7 @@
 import type { Identity } from './attio/identity'
 import type { Task } from './attio/schemas'
 import { ATTIO_APP_BASE_URL, DEFAULT_RESULT_LIMIT, type IconKey, README_SETUP_URL } from './constants'
+import { buildNoteAddArg } from './notes'
 import type { Strings } from './strings'
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,12 @@ export interface TodoInputs {
    * Attio is unreachable. Prepends the FR-007 offline-prefix row.
    */
   offline?: boolean
+  /**
+   * Whitespace-trimmed query the user typed after the keyword. Drives
+   * the Story 4.2 `mods.alt` payload (⌥⏎ creates a note from the
+   * query). When empty, no alt mod is emitted.
+   */
+  query?: string
   /** Defaults to `new Date()`. Overridable for deterministic tests. */
   now?: Date
   /** Defaults to 9 (DEFAULT_RESULT_LIMIT / FR-011). */
@@ -207,7 +214,23 @@ function buildSubtitle(task: Task, names: Map<string, string>, now: Date, string
   return parts.join(' · ')
 }
 
-function taskRow(task: Task, workspaceSlug: string, names: Map<string, string>, now: Date, strings: Strings): TodoRow {
+function taskRow(
+  task: Task,
+  workspaceSlug: string,
+  names: Map<string, string>,
+  now: Date,
+  strings: Strings,
+  query: string,
+): TodoRow {
+  const altArg = buildNoteAddArg({
+    slug: 'tasks',
+    id: task.id,
+    content: query,
+    recordName: task.content || task.id,
+  })
+  const alt: TodoMod | undefined = altArg
+    ? { arg: altArg, valid: true, subtitle: strings.t('note.add.subtitle') }
+    : undefined
   return {
     uid: `task-${task.id}`,
     title: task.content || '(no content)',
@@ -222,6 +245,7 @@ function taskRow(task: Task, workspaceSlug: string, names: Map<string, string>, 
         valid: true,
         subtitle: strings.t('task.mod.markComplete.subtitle'),
       },
+      ...(alt !== undefined ? { alt } : {}),
     },
   }
 }
@@ -248,6 +272,7 @@ export function buildTodoRows(inputs: TodoInputs, strings: Strings): TodoRow[] {
   const cap = inputs.cap ?? DEFAULT_RESULT_LIMIT
   const now = inputs.now ?? new Date()
   const workspaceSlug = inputs.identity?.workspaceSlug ?? ''
+  const query = inputs.query ?? ''
 
   // Filter + group.
   const { overdue, today } = partition(inputs.tasks, now)
@@ -274,13 +299,13 @@ export function buildTodoRows(inputs: TodoInputs, strings: Strings): TodoRow[] {
   // task ranks above every today task.
   for (const t of overdue) {
     if (remaining <= 0) break
-    rows.push(taskRow(t, workspaceSlug, inputs.linkedRecordNames, now, strings))
+    rows.push(taskRow(t, workspaceSlug, inputs.linkedRecordNames, now, strings, query))
     remaining -= 1
   }
 
   for (const t of today) {
     if (remaining <= 0) break
-    rows.push(taskRow(t, workspaceSlug, inputs.linkedRecordNames, now, strings))
+    rows.push(taskRow(t, workspaceSlug, inputs.linkedRecordNames, now, strings, query))
     remaining -= 1
   }
 
